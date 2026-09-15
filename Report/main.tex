@@ -1,0 +1,713 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage{lmodern}
+\usepackage[vietnamese]{babel}
+\usepackage[left=2.5cm,right=2.5cm,top=2.2cm,bottom=3cm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amsfonts}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage[table]{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18, scaled ticks=false, /pgf/number format/1000 sep={.}, /pgf/number format/use comma}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{indentfirst}
+\usepackage{caption}
+\usepackage{setspace}
+\usepackage{titlesec}
+
+% ---------- Giãn dòng và khoảng cách ----------
+\onehalfspacing
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{18pt}
+\renewcommand{\arraystretch}{1.35}
+\setlength{\emergencystretch}{3em}
+\captionsetup{font=small,labelfont=bf,skip=8pt}
+\setlist{itemsep=3pt, topsep=4pt}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+\titlespacing*{\subsubsection}{0pt}{6pt}{2pt}
+\setlength{\textfloatsep}{12pt}
+\setlength{\intextsep}{10pt}
+
+\definecolor{tblhead}{RGB}{220,230,245}
+\definecolor{cBar}{RGB}{70,130,180}
+\definecolor{cChurn}{RGB}{205,92,92}
+
+
+% ---------- Header / Footer ----------
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=8mm, height=8mm]{LOGO HCMUT.png}}
+   \end{picture}&
+        \begin{tabular}{l}
+                {\small TRƯỜNG ĐẠI HỌC BÁCH KHOA - ĐHQG-HCM}\\
+                {\small KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH}
+        \end{tabular}
+ \end{tabular}
+}
+\fancyfoot{}
+\fancyfoot[L]{\footnotesize \textbf{Báo cáo Coursework môn Kho dữ liệu và Hệ hỗ trợ quyết định - CO5113}}
+\fancyfoot[R]{\footnotesize Trang \thepage /\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+\begin{document}
+
+% ======================= TRANG BÌA =======================
+\begin{titlepage}
+\begin{center}
+    {ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH}\\
+    {TRƯỜNG ĐẠI HỌC BÁCH KHOA}\\
+    \textbf{KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH}
+\end{center}
+
+\vspace{10pt}
+\begin{center}
+    \includegraphics[scale=0.7]{LOGO HCMUT.png}
+
+    \vspace{40pt}
+    \begin{tabular}{c}
+    \multicolumn{1}{l}{\textbf{{\large KHO DỮ LIỆU VÀ HỆ HỖ TRỢ QUYẾT ĐỊNH (CO5113)}}}\\
+    ~~\\
+    \hline
+    \\
+    \multicolumn{1}{l}{\textbf{{\large Báo cáo Coursework -- Chủ đề: Customer Churn}}}\\
+    \\
+    \textbf{\textit{{\Huge “Dataset Analysis”}}}\\
+    \\
+    {\large Hiểu khách hàng của CompanyX qua kho dữ liệu}\\
+    \\
+    \hline
+    \end{tabular}
+\end{center}
+
+\vspace{2cm}
+
+\begin{table}[h]
+\centering
+    \begin{tabular}{rl}
+    \textbf{GVHD}:      & \dots \\
+    & \\
+    \textbf{Nhóm}:      & \dots \\
+    & \\
+    \textbf{SV thực hiện}: & Lương Bảo Thiên - MSSV \\
+    \textbf{Phần phụ trách}: & Mục 3 -- Dataset Analysis
+    \end{tabular}
+\end{table}
+
+\vspace{50pt}
+\begin{center}
+    {TP. HỒ CHÍ MINH, THÁNG 09/2026}
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+
+% =====================================================================
+\section{Kho dữ liệu CompanyX có gì?}
+\label{sec:overview}
+\subsection{Nguồn gốc và quy mô}
+Nhóm được cung cấp một bản sao lưu cơ sở dữ liệu tên \texttt{CompanyX.bak}, dung lượng 214 MB. Khi khôi phục bản sao lưu này lên SQL Server, tên gốc bên trong hiện ra là \texttt{AdventureWorks2022}. CompanyX vì vậy chính là bộ dữ liệu mẫu AdventureWorks của Microsoft, mô phỏng công ty Adventure Works Cycles: một doanh nghiệp sản xuất và bán xe đạp, linh kiện, quần áo và phụ kiện đạp xe. Công ty bán hàng theo hai kênh, trực tuyến cho khách cá nhân và bán sỉ qua các cửa hàng đại lý do nhân viên kinh doanh phụ trách, trên ba khu vực Bắc Mỹ, Châu Âu và Châu Úc. Bảng~\ref{tab:overview} tóm tắt quy mô kho dữ liệu.
+
+\begin{table}[H]
+\centering
+\caption{Quy mô kho dữ liệu CompanyX}
+\label{tab:overview}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.5cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Thông số} & \textbf{Giá trị} \\
+\midrule
+Số bảng dữ liệu & 72 bảng, chia thành 6 nhóm nghiệp vụ \\
+Số view (truy vấn được đặt tên, không lưu dữ liệu riêng) & 24 \\
+Khoảng thời gian có giao dịch & 31/05/2011 -- 30/06/2014 (37 tháng) \\
+Số khách hàng có mua hàng & 19.119 \\
+Số đơn hàng & 31.465 đơn, gồm 121.317 dòng sản phẩm \\
+Tổng doanh thu & 123,16 triệu USD \\
+Số sản phẩm & 504 sản phẩm, thuộc 4 danh mục lớn và 37 danh mục con \\
+Số lãnh thổ bán hàng & 10 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Sáu nhóm bảng theo bộ phận nghiệp vụ}
+72 bảng được xếp thành 6 nhóm, mỗi nhóm ứng với một bộ phận trong công ty (Bảng~\ref{tab:schemas}). Với chủ đề khách hàng rời bỏ, hai nhóm Bán hàng (Sales) và Cá nhân (Person) chứa gần như toàn bộ thông tin cần thiết: khách là ai và đã mua gì. Nhóm Sản xuất (Production) cho biết tên và loại sản phẩm. Ba nhóm còn lại ghi nhận việc mua nguyên liệu từ nhà cung cấp, nhân sự và các bảng hệ thống, hầu như không liên quan đến chủ đề.
+
+\begin{table}[H]
+\centering
+\caption{Các nhóm bảng trong CompanyX và mức độ liên quan đến chủ đề}
+\label{tab:schemas}
+\small
+\begin{tabularx}{\textwidth}{l c X c}
+\toprule
+\rowcolor{tblhead} \textbf{Nhóm} & \textbf{Số bảng} & \textbf{Chứa thông tin gì} & \textbf{Liên quan} \\
+\midrule
+Sales (Bán hàng) & 19 & Khách hàng, cửa hàng đại lý, đơn hàng, chi tiết đơn, lãnh thổ, nhân viên kinh doanh, chương trình khuyến mãi, lý do mua, thẻ tín dụng, tỷ giá & Cao \\
+Person (Cá nhân) & 13 & Thông tin cá nhân, địa chỉ, email, điện thoại, quốc gia/tỉnh thành & Cao \\
+Production (Sản xuất) & 25 & Sản phẩm, danh mục, mẫu xe, tồn kho, lệnh sản xuất, lịch sử giá & Trung bình \\
+Purchasing (Mua hàng) & 5 & Nhà cung cấp, đơn mua nguyên liệu, phương thức vận chuyển & Thấp \\
+HumanResources (Nhân sự) & 6 & Nhân viên, phòng ban, lương, ca làm việc & Thấp \\
+dbo (Hệ thống) & 4 & Nhật ký hệ thống, phiên bản; kèm 4 view bổ sung riêng của CompanyX & Hỗ trợ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Các bảng quan trọng và ý nghĩa của chúng}
+Bảng~\ref{tab:tables} liệt kê những bảng được dùng trong phân tích, số dòng thực tế và thông tin mà mỗi bảng mang lại.
+
+\begin{table}[H]
+\centering
+\caption{Các bảng chính phục vụ phân tích khách hàng}
+\label{tab:tables}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.3cm} r X}
+\toprule
+\rowcolor{tblhead} \textbf{Bảng} & \textbf{Số dòng} & \textbf{Cho biết điều gì} \\
+\midrule
+Sales.Customer & 19.820 & Danh sách khách hàng. Mỗi khách hoặc là một cá nhân, hoặc là một cửa hàng đại lý, và thuộc về một lãnh thổ bán hàng \\
+Sales.Store & 701 & Hồ sơ đại lý: tên cửa hàng, nhân viên kinh doanh phụ trách, kết quả khảo sát (loại hình, chuyên môn, doanh số năm, số nhân viên, năm mở cửa) \\
+Person.Person & 19.972 & Hồ sơ cá nhân: họ tên, vai trò (khách hàng, nhân viên, nhà cung cấp\dots), có đồng ý nhận email khuyến mãi hay không, và kết quả khảo sát nhân khẩu học \\
+Sales.SalesOrderHeader & 31.465 & Mỗi đơn hàng: ngày đặt, ngày giao, trạng thái (đã giao/đã hủy), kênh bán (online hay đại lý), nhân viên bán, tổng tiền \\
+Sales.SalesOrderDetail & 121.317 & Từng sản phẩm trong đơn: sản phẩm gì, số lượng, đơn giá, mức giảm giá, chương trình khuyến mãi áp dụng \\
+Sales.SalesOrderHeader\-SalesReason & 27.647 & Lý do khách chọn mua (giá, khuyến mãi, chất lượng, quảng cáo TV\dots) gắn với từng đơn \\
+Sales.SalesTerritory & 10 & 10 lãnh thổ bán hàng, thuộc 3 khu vực: Bắc Mỹ, Châu Âu, Thái Bình Dương \\
+Sales.SpecialOffer & 16 & Các chương trình khuyến mãi: giảm theo số lượng, theo mùa, sản phẩm mới, xả tồn kho \\
+Production.Product & 504 & Sản phẩm và giá niêm yết; được xếp vào 37 danh mục con và 4 danh mục lớn (Xe đạp, Linh kiện, Quần áo, Phụ kiện) \\
+Person.Address, CountryRegion & 19.614 / 238 & Địa chỉ và quốc gia của khách hàng \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Kết quả khảo sát khách cá nhân (tuổi, thu nhập, nghề nghiệp\dots) không được lưu thành các cột riêng mà gói chung trong một trường XML của bảng \texttt{Person.Person}. CompanyX cung cấp sẵn view \texttt{Sales.vPersonDemographics} để tách trường này thành 12 thuộc tính: ngày sinh, giới tính, tình trạng hôn nhân, thu nhập năm, học vấn, nghề nghiệp, tổng số con, số con còn ở nhà, sở hữu nhà, số xe hơi, ngày mua đầu tiên và tổng mua trong năm. Khảo sát cửa hàng được lưu và tách tương tự trong view \texttt{Sales.vStoreWithDemographics}. Cần phân biệt: view là một truy vấn được đặt tên, đọc dữ liệu từ bảng gốc mỗi khi được gọi, không phải bảng lưu sẵn kết quả; vì vậy số liệu lấy qua view luôn khớp với bảng gốc, nhưng chi phí truy vấn nằm ở bước tách XML.
+
+So với bộ AdventureWorks gốc, CompanyX có thêm bốn view trong nhóm \texttt{dbo}: \texttt{PersonCustomerView} (khách cá nhân kèm họ tên), \texttt{StoreCustomerView} (khách đại lý kèm tên cửa hàng), \texttt{SalesPersonView} (hồ sơ nhân viên kinh doanh với chỉ tiêu, thưởng, hoa hồng, doanh số) và \texttt{SalesOrderDetailView} (chi tiết đơn hàng kèm lý do mua, chỉ lấy những dòng có áp dụng khuyến mãi). Hai view đầu tách sẵn hai nhóm khách hàng, view cuối tập trung vào các dòng hàng có khuyến mãi.
+
+\subsection{Những bảng nào thực sự cần cho chủ đề?}
+Khi khảo sát sơ bộ, nhóm nhận thấy hai cụm bảng liên quan trực tiếp đến chủ đề: cụm Bán hàng gồm \texttt{Customer}, \texttt{SalesOrderHeader}, \texttt{SalesOrderDetail}, \texttt{SalesTerritory}, \texttt{Store}, và cụm Cá nhân gồm \texttt{Person}. Để chắc chắn, nhóm kiểm tra lại các mối liên kết được khai báo trong cơ sở dữ liệu (Bảng~\ref{tab:fk}). Kết quả xác nhận nhận định ban đầu: các bảng này nối với nhau thành một chuỗi liền mạch, đi từ khách hàng là ai đến họ đã mua gì.
+
+\begin{table}[H]
+\centering
+\caption{Các mối liên kết giữa những bảng trung tâm}
+\label{tab:fk}
+\footnotesize
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.8cm} >{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{4.1cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Từ bảng} & \textbf{Qua cột} & \textbf{Đến bảng} & \textbf{Ý nghĩa} \\
+\midrule
+Sales.Customer & PersonID & Person.Person & Khách hàng là một cá nhân \\
+Sales.Customer & StoreID & Sales.Store & Khách hàng là một đại lý \\
+Sales.Customer & TerritoryID & Sales.SalesTerritory & Khách thuộc lãnh thổ nào \\
+Sales.SalesOrderHeader & CustomerID & Sales.Customer & Đơn hàng của khách nào \\
+Sales.SalesOrderHeader & TerritoryID & Sales.SalesTerritory & Đơn bán ở lãnh thổ nào \\
+Sales.SalesOrderHeader & SalesPersonID & Sales.SalesPerson & Nhân viên nào bán (kênh đại lý) \\
+Sales.SalesOrderDetail & SalesOrderID & Sales.SalesOrderHeader & Dòng sản phẩm thuộc đơn nào \\
+Sales.SalesOrderDetail & ProductID, SpecialOfferID & Sales.SpecialOffer\-Product & Sản phẩm nào, khuyến mãi nào \\
+Sales.SalesOrderHeader\-SalesReason & SalesOrderID, SalesReasonID & Sales.SalesOrderHeader, Sales.Sales\-Reason & Lý do mua của đơn \\
+Sales.Store & SalesPersonID & Sales.SalesPerson & Đại lý do ai phụ trách \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Về bản số (cardinality): một khách có nhiều đơn, một đơn có nhiều dòng hàng (quan hệ một--nhiều). Riêng lý do mua là quan hệ nhiều--nhiều: bảng cầu \texttt{SalesOrderHeaderSalesReason} có khóa chính ghép (\texttt{SalesOrderID}, \texttt{SalesReasonID}), nên một đơn có thể gắn nhiều lý do và mỗi lý do gắn với nhiều đơn. Khi nối bảng đơn hàng với bảng này, số dòng sẽ tăng theo số lý do của đơn; các thống kê về lý do mua ở Mục~\ref{sec:how} vì vậy đếm riêng số lý do, số đơn và số khách.
+
+Để trả lời trọn vẹn các câu hỏi về khách hàng, cần thêm ba nguồn ngoài danh sách trên: bảng lý do mua để biết vì sao khách mua; chuỗi \texttt{Product} $\to$ \texttt{ProductSubcategory} $\to$ \texttt{ProductCategory} để biết khách mua nhóm sản phẩm gì; và hai view nhân khẩu học đã nêu. Tất cả gộp lại khoảng 10 bảng, được vẽ lại theo ngôn ngữ nghiệp vụ trong Hình~\ref{fig:erd}. Bảng Khách hàng nằm ở giữa; mỗi khách có nhiều Đơn hàng; mỗi đơn gồm nhiều Dòng sản phẩm. Khách cá nhân được mô tả thêm bằng Hồ sơ cá nhân, khách đại lý bằng Hồ sơ cửa hàng, và mỗi đơn hàng gắn với một Lý do mua.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  ent/.style={draw, rounded corners=3pt, fill=blue!6, font=\small\sffamily, align=center, inner sep=6pt, minimum width=3cm, minimum height=1.1cm},
+  rel/.style={-{Latex[length=2.5mm]}, thick, gray!60!black},
+  lbl/.style={font=\scriptsize, fill=white, inner sep=1.5pt}
+]
+\node[ent] (cust) at (0,0) {\textbf{Khách hàng}\\ 19.119};
+\node[ent] (person) at (-5,1.8) {\textbf{Hồ sơ cá nhân}\\ tuổi, thu nhập, nghề\dots};
+\node[ent] (store) at (-5,-1.8) {\textbf{Hồ sơ cửa hàng}\\ loại hình, chuyên môn};
+\node[ent] (terr) at (0,2.6) {\textbf{Lãnh thổ}\\ 10 vùng};
+\node[ent] (soh) at (5,0) {\textbf{Đơn hàng}\\ 31.465};
+\node[ent] (sod) at (5,-2.8) {\textbf{Dòng sản phẩm}\\ 121.317};
+\node[ent] (prod) at (0,-2.8) {\textbf{Sản phẩm}\\ 504, 4 danh mục};
+\node[ent] (reason) at (5,2.6) {\textbf{Lý do mua}\\ giá, KM, quảng cáo};
+\draw[rel] (cust) -- node[lbl]{cá nhân} (person);
+\draw[rel] (cust) -- node[lbl]{đại lý} (store);
+\draw[rel] (cust) -- (terr);
+\draw[rel] (soh) -- node[lbl]{1 khách -- n đơn} (cust);
+\draw[rel] (sod) -- node[lbl]{1 đơn -- n dòng} (soh);
+\draw[rel] (sod) -- (prod);
+\draw[rel, dashed] (soh) -- (reason);
+\end{tikzpicture}
+\caption{Các thành phần trung tâm của kho dữ liệu nhìn từ góc độ khách hàng.}
+\label{fig:erd}
+\end{figure}
+
+\subsection{Dữ liệu này đáng tin đến đâu?}
+Toàn bộ 90 mối liên kết giữa các bảng còn nguyên vẹn, không có mã khách hay mã đơn bị trùng. 100\% khách cá nhân có đầy đủ hồ sơ khảo sát; 100\% cửa hàng có hồ sơ và có nhân viên phụ trách. Những vấn đề tìm thấy (Bảng~\ref{tab:quality}) đều nhỏ và có cách xử lý rõ ràng, nên kho dữ liệu này đủ sạch để phân tích mà không cần công đoạn làm sạch nặng.
+
+\begin{table}[H]
+\centering
+\caption{Các vấn đề về chất lượng dữ liệu và cách xử lý}
+\label{tab:quality}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.4cm} X >{\raggedright\arraybackslash}p{3.8cm}}
+\toprule
+\rowcolor{tblhead} \textbf{Vấn đề} & \textbf{Chi tiết} & \textbf{Cách xử lý} \\
+\midrule
+701 dòng \texttt{Customer} không có đơn & \texttt{PersonID} rỗng, \texttt{StoreID} có giá trị; không có đơn hàng nào & Bỏ ra khỏi tập phân tích; 19.119 khách còn lại đều có đơn \\
+2 đơn có tổng tiền âm & Đơn 43678 (19 dòng hàng) và 43682 (5 dòng), ngày 31/05/2011, kênh đại lý, trạng thái 5. Toàn bộ dòng hàng của hai đơn đều có \texttt{LineTotal} âm; dữ liệu không ghi lý do (có thể là trả hàng hoặc bút toán điều chỉnh) & Giữ trong số liệu mô tả; loại khỏi tập phân tích churn vì không thể xác nhận đây là lần mua \\
+315 đơn trạng thái 6 & Cột \texttt{Status} chỉ có hai giá trị: 5 (31.150 đơn) và 6 (315 đơn, tổng 1,18 triệu USD). Theo tài liệu AdventureWorks, 5 = đã giao, 6 = đã hủy & Giữ trong số liệu mô tả; không tính là lần mua trong tập phân tích churn \\
+76\% đơn dồn vào 12 tháng cuối & Kênh online tăng vọt từ quý 3/2013 & Chọn mốc gắn nhãn sao cho khách có đủ thời gian quan sát (Mục~\ref{sec:label}) \\
+Một số trường chữ chưa chuẩn & ``Bachelors '' thừa khoảng trắng; thu nhập ghi theo khoảng chứ không phải số & Chuẩn hóa trước khi dùng làm biến phân tích \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Báo cáo dùng hai tập dữ liệu và ghi rõ ở từng chỗ. \emph{Tập mô tả} là toàn bộ dữ liệu gốc, dùng cho các thống kê ở Mục~\ref{sec:who} đến Mục~\ref{sec:how} để giữ đúng con số của kho dữ liệu. \emph{Tập phân tích churn} loại hai đơn âm và 315 đơn hủy; Bảng~\ref{tab:before-after} cho thấy việc loại này làm mất 124 khách (những khách chỉ có đơn hủy) và khoảng 1\% đơn, dòng hàng và doanh thu. Để tiện đối chiếu với các con số đã công bố trong nhóm, các bảng ở Mục~\ref{sec:churn} vẫn trình bày kết quả trên tập gốc và ghi kèm kết quả trên tập đã lọc ở những chỗ có khác biệt; chênh lệch ở tỷ lệ rời bỏ tổng thể là 16,9\% so với 17,6\%.
+
+\begin{table}[H]
+\centering
+\caption{Quy mô dữ liệu trước và sau khi loại đơn hủy và đơn âm (truy vấn V02e)}
+\label{tab:before-after}
+\footnotesize
+\begin{tabularx}{\textwidth}{Xrrrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Tập dữ liệu} & \textbf{Khách} & \textbf{Đơn} & \textbf{Dòng hàng} & \makecell[r]{\textbf{Trước thuế}\\\textbf{(USD)}} & \makecell[r]{\textbf{Tổng phải trả}\\\textbf{(USD)}} \\
+\midrule
+Gốc (tập mô tả) & 19.119 & 31.465 & 121.317 & 109.784.736 & 123.155.141 \\
+Đã lọc (tập phân tích churn) & 18.995 & 31.148 & 120.123 & 108.748.472 & 121.990.642 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{Chủ đề khách hàng rời bỏ trên kho dữ liệu này}
+Khách hàng rời bỏ (customer churn) là khách đã ngừng mua hàng của doanh nghiệp. Trong kho dữ liệu không có cột nào ghi ``khách này đã rời bỏ'': CompanyX là doanh nghiệp bán lẻ, khách không ký hợp đồng và không thông báo khi ngừng mua. Muốn biết ai đang rời bỏ và tại sao, trước hết phải hiểu khách hàng là ai, họ thích mua gì, mua như thế nào, và người ở lại khác gì người ra đi. Phần Dataset Analysis là bước làm quen đó, dựa trên các bảng đã xác định ở Mục~\ref{sec:overview}.
+
+Các mục tiếp theo lần lượt trả lời bốn câu hỏi: khách hàng của chúng ta là ai (Mục~\ref{sec:who}); họ thích mua gì (Mục~\ref{sec:what}); họ mua như thế nào, qua kênh nào, bao lâu một lần, vào lúc nào và vì lý do gì (Mục~\ref{sec:how}); và ai đang rời bỏ, kèm những dấu hiệu nào (Mục~\ref{sec:churn}). Mỗi nhận định đều đi kèm con số lấy từ kho dữ liệu và, ở những chỗ cần thiết, kiến thức về quản trị khách hàng để giải thích vì sao đo theo cách đó.
+
+Công cụ sử dụng gồm Microsoft SQL Server 2022 Express để khôi phục và lưu dữ liệu, DBeaver để truy vấn, và \LaTeX{} để trình bày. Các câu truy vấn được lưu trong tệp đính kèm \texttt{verify\_queries.sql} (đánh mã V01--V12, kết quả chạy trong \texttt{verify\_results.txt}) và ba tệp \texttt{analyze\_queries*.sql}; mỗi con số trong báo cáo được ghi kèm mã truy vấn tương ứng khi cần đối chiếu.
+
+% =====================================================================
+\section{Khách hàng của chúng ta là ai?}
+\label{sec:who}
+\subsection{Hai nhóm khách hàng rất khác nhau}
+Trong 19.119 khách đã mua hàng, 18.484 người (96,7\%) là khách cá nhân mua online và chỉ 635 (3,3\%) là cửa hàng đại lý. Nhìn theo doanh thu thì bức tranh đảo ngược: nhóm đại lý ít ỏi mang lại 74\% doanh thu, với giá trị mỗi đơn cao gấp 20 lần đơn của khách cá nhân (Bảng~\ref{tab:channel}).
+
+\begin{table}[H]
+\centering
+\caption{Hai nhóm khách hàng của CompanyX}
+\label{tab:channel}
+\small
+\begin{tabularx}{\textwidth}{Xrrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Nhóm} & \textbf{Số khách} & \textbf{Số đơn} & \textbf{Doanh thu} & \textbf{Trung bình/đơn} \\
+\midrule
+Khách cá nhân (online) & 18.484 & 27.659 & 32,4 triệu USD (26\%) & 1.173 USD \\
+Đại lý & 635 & 3.806 & 90,7 triệu USD (74\%) & 23.834 USD \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Sự tập trung này còn rõ hơn khi xếp toàn bộ khách theo tổng số tiền đã chi và chia làm năm phần bằng nhau: 20\% khách chi nhiều nhất tạo ra 89,7\% doanh thu, còn 60\% khách ở nhóm chi ít nhất chỉ đóng góp 2\%. Đây là nguyên lý 80/20 quen thuộc trong quản trị khách hàng. Tính trên toàn bộ 37 tháng (truy vấn V03), một đại lý đặt trung bình 6,0 đơn và mang lại 142.856 USD; một khách cá nhân đặt 1,5 đơn và mang lại 1.755 USD. Tỷ lệ 20 lần ở cấp đơn trở thành khoảng 80 lần ở cấp khách hàng, vì đại lý vừa đặt đơn lớn hơn vừa đặt nhiều đơn hơn. Reichheld và Sasser (1990) đã chỉ ra rằng giữ một khách cũ rẻ hơn nhiều so với tìm một khách mới, nên nguồn lực giữ chân cần dồn vào nhóm có giá trị cao. Vì hai nhóm khách khác nhau cả về cách mua lẫn giá trị, các phân tích tiếp theo tách riêng chúng thay vì gộp chung.
+
+\subsection{Chân dung khách cá nhân}
+Hồ sơ khảo sát của 18.484 khách cá nhân (Bảng~\ref{tab:demo}; tuổi tính tại ngày cuối dữ liệu 30/06/2014, ngày sinh trong dữ liệu trải từ 1910 đến 1980 nên không có khách dưới 33 tuổi) cho thấy một tệp khách khá đồng nhất: phần lớn ở tuổi 40--59, thu nhập 25--75 nghìn USD một năm, đã kết hôn, có con, có nhà riêng và xe hơi, sống ở Mỹ, Úc hoặc Tây Âu. Tỷ lệ nam nữ gần như bằng nhau.
+
+\begin{table}[H]
+\centering
+\caption{Chân dung khách cá nhân}
+\label{tab:demo}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Đặc điểm} & \textbf{Tỷ lệ} \\
+\midrule
+Giới tính & Nam 50,6\% -- Nữ 49,4\% \\
+Độ tuổi & 30--39: 12\% -- 40--49: 33\% -- 50--59: 29\% -- 60+: 26\% \\
+Hôn nhân & Đã kết hôn 54\% -- Độc thân 46\% \\
+Thu nhập/năm & Dưới 25k: 16\% -- 25--50k: 31\% -- 50--75k: 30\% -- 75--100k: 15\% -- Trên 100k: 9\% \\
+Nghề nghiệp & Chuyên môn 30\% -- Lao động kỹ thuật 25\% -- Quản lý 17\% -- Văn phòng 16\% -- Lao động phổ thông 13\% \\
+Học vấn & Cử nhân 29\% -- Cao đẳng dở dang 27\% -- Trung học 18\% -- Sau đại học 17\% \\
+Gia đình & 72\% có con; 68\% có nhà riêng; 74\% có ít nhất 1 xe hơi \\
+Quốc gia & Mỹ 42\% -- Úc 19\% -- Anh 10\% -- Pháp 10\% -- Đức 10\% -- Canada 9\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Dữ liệu không ghi nhận mục đích sử dụng, nhưng hồ sơ này (trung niên, có thu nhập ổn định, có nhà và xe hơi, ở các nước phát triển) gợi ý đây phần lớn là người mua xe đạp để giải trí và rèn luyện sức khỏe hơn là để đi lại hằng ngày. Tỷ lệ nam nữ cân bằng cho thấy sản phẩm không nghiêng về nam giới như người ta thường nghĩ về xe đạp thể thao.
+
+\subsection{Chân dung đại lý}
+701 cửa hàng trong hệ thống chia khá đều thành ba loại: nhà sản xuất xe đạp (238), cửa hàng xe đạp (231) và cửa hàng bán online (232). Về chuyên môn, 300 cửa hàng thiên về xe đường trường, 246 về xe địa hình và 155 về xe du lịch. Doanh số năm của cửa hàng dao động từ 300 nghìn đến 3 triệu USD, trong đó 204 cửa hàng ở mức 3 triệu; quy mô trung bình 40 nhân viên; năm mở cửa từ 1970 đến 2001. Đó là những doanh nghiệp cỡ vừa, hoạt động lâu năm và có nhân viên kinh doanh của CompanyX phụ trách trực tiếp, nên mối quan hệ cá nhân giữa hai bên có thể ảnh hưởng lớn đến việc họ ở lại hay ra đi.
+
+\subsection{Khách hàng ở đâu?}
+Hai vùng của Mỹ (Southwest, Northwest) và Úc là ba thị trường đông khách nhất (Hình~\ref{fig:territory}). Úc đông khách thứ hai nhưng doanh thu chỉ đứng thứ năm vì gần như toàn khách online. Ngược lại, ba vùng Southeast, Central và Northeast của Mỹ có rất ít khách nhưng doanh thu cao, vì gần như toàn đại lý. Cơ cấu này sẽ giải thích một phần khác biệt về tỷ lệ rời bỏ giữa các vùng ở Mục~\ref{sec:churn}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  xbar, bar width=7pt, width=0.9\textwidth, height=7.2cm,
+  xlabel={Số khách hàng}, xmin=0, xmax=5600,
+  symbolic y coords={Northeast,Central,Southeast,Canada,Germany,France,United Kingdom,Northwest,Australia,Southwest},
+  ytick=data, y tick label style={font=\scriptsize}, xmajorgrids, grid style={gray!25},
+  nodes near coords, nodes near coords align={horizontal}, every node near coord/.append style={font=\scriptsize},
+  enlarge y limits=0.07
+]
+\addplot[fill=cBar, draw=cBar!70!black] coordinates {(113,Northeast) (132,Central) (176,Southeast) (1791,Canada) (1852,Germany) (1884,France) (1991,United Kingdom) (3520,Northwest) (3665,Australia) (4696,Southwest)};
+\end{axis}
+\end{tikzpicture}
+\caption{Số khách hàng theo lãnh thổ bán hàng.}
+\label{fig:territory}
+\end{figure}
+
+% =====================================================================
+\section{Khách hàng thích mua sản phẩm gì?}
+\label{sec:what}
+\subsection{Doanh thu và độ phủ khách hàng theo danh mục sản phẩm}
+Tính theo giá bán trước thuế và phí vận chuyển (tổng 109,8 triệu USD; cộng thêm 10,2 triệu thuế và 3,2 triệu phí vận chuyển sẽ ra con số 123,16 triệu ở Bảng~\ref{tab:overview}), xe đạp chiếm 94,6 triệu USD, tức 86\%; linh kiện 11,8 triệu (11\%), quần áo 2,1 triệu (2\%) và phụ kiện 1,3 triệu (1\%). Nhưng nếu đếm số khách từng mua thì thứ tự đảo lại: phụ kiện có 15.461 khách, xe đạp 9.719, quần áo 7.327 và linh kiện 580 (Hình~\ref{fig:category}).
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=14pt, width=0.85\textwidth, height=5.8cm,
+  ylabel={Số khách hàng từng mua}, symbolic x coords={acc,bike,cloth,comp},
+  xtick=data, xticklabels={Phụ kiện,Xe đạp,Quần áo,Linh kiện},
+  ymin=0, ymax=18000, ymajorgrids, grid style={gray!25},
+  nodes near coords, every node near coord/.append style={font=\scriptsize}, enlarge x limits=0.2
+]
+\addplot[fill=cBar, draw=cBar!70!black] coordinates {(acc,15461) (bike,9719) (cloth,7327) (comp,580)};
+\end{axis}
+\end{tikzpicture}
+\caption{Số khách từng mua theo danh mục: phụ kiện tiếp cận được nhiều khách nhất, xe đạp mang lại doanh thu lớn nhất.}
+\label{fig:category}
+\end{figure}
+
+Những sản phẩm được nhiều khách mua nhất đều là đồ nhỏ, rẻ và phải thay định kỳ: bình nước 30 oz (4.073 khách), săm xe địa hình (2.960), bộ vá săm (2.950), săm xe đường trường (2.226), mũ bảo hiểm Sport-100 ba màu (khoảng 2.000--2.150 khách mỗi màu) và mũ lưỡi trai AWC (2.132).
+
+Xe đạp là món hàng bền, vài năm mới mua lại một lần, còn phụ kiện là thứ hay hỏng, hay hết và được nhiều khách mua nhất. Trong marketing, hàng lâu bền có chu kỳ mua lại dài nên tự nó không tạo ra sự gắn bó thường xuyên; các nhà bán lẻ thường dùng hàng tiêu hao đi kèm để tăng số lần tiếp xúc với khách, theo kiểu bán dao cạo một lần và bán lưỡi dao nhiều lần. Với CompanyX, phụ kiện là kênh tiếp xúc sẵn có trong khoảng thời gian dài giữa hai lần mua xe. Liệu việc mua phụ kiện có thực sự giúp giữ chân khách hay không sẽ được xem xét ở Mục~\ref{sec:churn}.
+
+\subsection{Khách cá nhân và đại lý mua những thứ khác nhau}
+Ở kênh online, xe đường trường được nhiều khách chọn nhất (6.397 khách), kế đến là xe địa hình (4.089) và xe du lịch (2.143). Sở thích dòng xe không khác nhau giữa nam và nữ: xe đường trường có 3.224 khách nữ và 3.173 khách nam; xe địa hình có 2.069 nữ và 2.020 nam. Tỷ lệ khách có mua xe cao nhất ở tuổi 40--49 (59\%) và thấp dần ở nhóm trên 60 (40\%), tức người trẻ hơn thiên về mua xe, người lớn tuổi thiên về phụ kiện.
+
+Đại lý mua theo cách hoàn toàn khác: số lượng lớn (39 nghìn xe đường trường, 23 nghìn xe địa hình) và là nhóm duy nhất mua linh kiện rời như khung xe, bánh xe, với doanh thu hơn 10 triệu USD. Họ là khách doanh nghiệp đúng nghĩa, mua để lắp ráp hoặc bán lại.
+
+\subsection{Khách có mua nhiều loại hàng khác nhau không?}
+Trong 18.484 khách online, 7.892 người (43\%) chỉ mua một loại hàng, 8.570 (46\%) mua hai loại và 2.022 (11\%) mua cả ba loại. Đáng chú ý, trong 9.132 người từng mua xe có 7.677 (84\%) cũng mua thêm phụ kiện hoặc quần áo. Người đã mua xe rất sẵn lòng mua thêm đồ đi kèm, nghĩa là việc bán kèm đang được khai thác khá tốt. Nhóm ít gắn bó nhất là 43\% khách chỉ mua đúng một loại hàng, đa số là vài món phụ kiện lẻ.
+
+% =====================================================================
+\section{Khách hàng mua như thế nào?}
+\label{sec:how}
+\subsection{Mua bao nhiêu lần?}
+Hơn 60\% khách chỉ mua đúng một lần (11.649 người); 29\% mua hai lần; chỉ 10\% mua từ ba lần trở lên (Hình~\ref{fig:freq}). Trung bình mỗi khách mua 1,65 lần. Nhóm mua từ sáu lần trở lên (337 khách) gần như toàn bộ là đại lý đặt hàng định kỳ.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=18pt, width=0.85\textwidth, height=5.5cm,
+  ylabel={Số khách hàng}, xlabel={Số lần mua},
+  symbolic x coords={1,2,3,4--5,6--12,13--28},
+  xtick=data, ymin=0, ymax=13500, ymajorgrids, grid style={gray!25},
+  nodes near coords, every node near coord/.append style={font=\scriptsize}, enlarge x limits=0.12
+]
+\addplot[fill=cBar, draw=cBar!70!black] coordinates {(1,11649) (2,5473) (3,1204) (4--5,456) (6--12,302) (13--28,35)};
+\end{axis}
+\end{tikzpicture}
+\caption{Số lần mua của 19.119 khách hàng.}
+\label{fig:freq}
+\end{figure}
+
+Với khách cá nhân mua từ hai lần trở lên, hai lần mua cách nhau trung bình 317 ngày, và 38\% số lần quay lại cách lần trước hơn một năm. Với đại lý, khoảng cách trung bình chỉ 99 ngày, tức đặt hàng gần như mỗi quý. Khách cá nhân mua thưa, phần lớn là khách một lần, và nếu có quay lại thì thường gần một năm sau; đại lý mua đều đặn. Sự khác biệt này quyết định cách hiểu ``rời bỏ'' ở Mục~\ref{sec:churn}: một khách cá nhân im lặng sáu tháng là chuyện bình thường, nhưng một đại lý im lặng sáu tháng, tức bỏ qua hai kỳ đặt hàng, là bất thường.
+
+Số lần mua và khoảng cách giữa các lần mua được xem trước mọi con số khác vì đây là hai trong ba yếu tố của mô hình RFM (Hughes, 1994): khách mua gần đây không (Recency), mua thường xuyên không (Frequency) và chi bao nhiêu (Monetary). Mô hình BG/NBD của Fader, Hardie và Lee (2005) cũng chỉ dùng đúng hai đại lượng này, số lần mua lặp lại và thời điểm mua cuối, để ước lượng xác suất khách còn ``hoạt động'' trong bối cảnh không hợp đồng.
+
+\subsection{Mua vào lúc nào?}
+Hình~\ref{fig:quarter} vẽ tổng số đơn của cả hai kênh theo quý (truy vấn V09a). Bước nhảy từ 1.575 đơn (quý 2/2013) lên 5.320 đơn (quý 3/2013) đến gần như hoàn toàn từ kênh online: số đơn online tăng từ 1.192 lên 4.866, trong khi đơn đại lý chỉ tăng từ 383 lên 454 và sau đó dao động quanh 450 đơn mỗi quý. Quý 2/2014 của kênh đại lý chỉ có 181 đơn, thấp bất thường so với các quý trước; dữ liệu kết thúc đúng ngày 30/06/2014 nên chưa rõ đây là sụt giảm thật hay do cách ghi nhận đơn cuối kỳ.
+
+Dữ liệu chưa đủ để kết luận về mùa vụ. Khi tách theo năm (V09b), số đơn online mỗi tháng tăng hơn 5 lần từ 2013 sang 2014, nên tổng theo tháng bị chi phối bởi tăng trưởng chứ không phải chu kỳ trong năm; hơn nữa năm 2011 chỉ có từ tháng 6 và năm 2014 chỉ đến tháng 6, mỗi tháng không có đủ số năm quan sát để so sánh. Nhóm không đưa ra nhận định về tháng cao điểm.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=9pt, width=0.95\textwidth, height=6cm,
+  ylabel={Số đơn hàng}, xlabel={Quý},
+  symbolic x coords={2011Q2,2011Q3,2011Q4,2012Q1,2012Q2,2012Q3,2012Q4,2013Q1,2013Q2,2013Q3,2013Q4,2014Q1,2014Q2},
+  xtick=data, x tick label style={rotate=45, anchor=east, font=\scriptsize},
+  ymin=0, ymajorgrids, grid style={gray!25}, nodes near coords, every node near coord/.append style={font=\tiny},
+  enlarge x limits=0.05
+]
+\addplot[fill=cBar, draw=cBar!70!black] coordinates {(2011Q2,182) (2011Q3,638) (2011Q4,785) (2012Q1,859) (2012Q2,954) (2012Q3,1022) (2012Q4,1082) (2013Q1,1166) (2013Q2,1575) (2013Q3,5320) (2013Q4,6121) (2014Q1,6296) (2014Q2,5465)};
+\end{axis}
+\end{tikzpicture}
+\caption{Tổng số đơn hàng (cả hai kênh) theo quý; bước nhảy từ quý 3/2013 đến từ kênh online.}
+\label{fig:quarter}
+\end{figure}
+
+Hệ quả là phần lớn khách cá nhân là khách mới, chỉ xuất hiện trong 12 tháng cuối. Họ chưa có đủ thời gian để chứng tỏ mình là khách trung thành hay đã rời bỏ, nên không thể gắn nhãn ``rời bỏ'' cho toàn bộ khách một cách máy móc (Mục~\ref{sec:label}).
+
+\subsection{Vì sao họ mua?}
+Lý do mua chỉ được ghi nhận cho kênh online: 23.012 trong 27.659 đơn online (83,2\%) có ít nhất một lý do, không đơn đại lý nào có (truy vấn V08a, V08b). Một đơn có thể gắn nhiều lý do: 18.530 đơn có một lý do, 4.329 đơn có hai và 153 đơn có ba, tổng cộng 27.647 dòng lý do. Bảng~\ref{tab:reason} đếm theo số đơn để tránh một đơn bị tính nhiều lần.
+
+\begin{table}[H]
+\centering
+\caption{Lý do mua của đơn hàng online (23.012 đơn có ghi lý do; một đơn có thể có nhiều lý do)}
+\label{tab:reason}
+\small
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Lý do} & \textbf{Số đơn} & \textbf{Tỷ lệ trên 23.012 đơn} & \textbf{Số khách} \\
+\midrule
+Giá cả & 17.473 & 75,9\% & 14.529 \\
+Khuyến mãi & 3.515 & 15,3\% & 3.121 \\
+Thương hiệu nhà sản xuất & 1.746 & 7,6\% & 1.722 \\
+Chất lượng & 1.551 & 6,7\% & 1.551 \\
+Khác & 1.395 & 6,1\% & 1.337 \\
+Đánh giá của người khác & 1.245 & 5,4\% & 1.218 \\
+Quảng cáo truyền hình & 722 & 3,1\% & 657 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Giá cả được nêu ở ba phần tư số đơn có ghi lý do; các yếu tố về thương hiệu, chất lượng và quảng cáo đều dưới 8\%. Vì lý do mua do khách tự khai và chỉ có ở kênh online, kết luận ``khách quan tâm đến giá'' áp dụng cho khách cá nhân, không suy ra cho đại lý.
+
+Về khuyến mãi thực tế (V08c): 115.884 trong 121.317 dòng hàng (95,5\%) không có giảm giá. Các chương trình giảm giá trong bảng \texttt{SpecialOffer} đều thuộc nhóm ``Reseller'', nhưng vẫn xuất hiện ở 2.151 dòng hàng online (3,6\% dòng online) bên cạnh 3.282 dòng hàng đại lý (5,4\%). Nói cách khác, cả hai kênh đều hiếm khi có khuyến mãi, kênh online ít hơn một chút. Giá trị mỗi đơn online tăng theo thu nhập, từ 948 USD ở nhóm dưới 25 nghìn đến 1.527 USD ở nhóm trên 100 nghìn. Liệu một tập khách nêu ``giá'' làm lý do mua chính nhưng ít được khuyến mãi có dễ rời bỏ hơn hay không là câu hỏi mà dữ liệu hiện có chưa trả lời được.
+
+% =====================================================================
+\section{Ai đang rời bỏ và dấu hiệu nào đi kèm?}
+\label{sec:churn}
+\subsection{Thế nào là ``rời bỏ'' đối với doanh nghiệp bán lẻ?}
+\label{sec:label}
+Vì không có hợp đồng, việc rời bỏ phải được suy ra từ hành vi: khách rời bỏ là khách không mua gì trong một khoảng thời gian đủ dài. Câu hỏi là ``đủ dài'' là bao lâu và tính từ lúc nào.
+
+Kho dữ liệu không có cột nhãn rời bỏ nào (truy vấn V04a chỉ tìm thấy \texttt{ActiveFlag} của nhà cung cấp). Nhãn vì vậy phải được tạo theo quy ước.
+
+Cách đơn giản nhất là đếm ngược từ ngày cuối cùng có dữ liệu (30/06/2014) và gọi mọi khách không mua trong $W$ tháng cuối là rời bỏ (V04e). Với $W = 6$ tháng, 8.765 trong 19.119 khách (45,8\%) bị gắn nhãn rời bỏ; với $W = 12$ tháng chỉ còn 1.016 khách (5,3\%). Cách này có hai lỗi: mẫu số gồm cả hàng nghìn khách mới mua lần đầu trong $W$ tháng cuối, những người chưa hề có cơ hội mua lại; và ngưỡng 12 tháng bị khớp với chính đợt bùng nổ khách mới từ quý 3/2013, khiến tỷ lệ 5,3\% thấp một cách giả tạo.
+
+Nhóm đề xuất chia thời gian làm hai giai đoạn. Giai đoạn theo dõi kéo dài từ 31/05/2011 đến 30/06/2013: chỉ xét những khách đã mua lần đầu trong giai đoạn này, vì họ có ít nhất 12 tháng để thể hiện. Giai đoạn kiểm tra kéo dài từ 01/07/2013 đến 30/06/2014: khách được coi là rời bỏ nếu không có đơn nào trong giai đoạn này, ngược lại là ở lại. Theo cách này (V04b, tính trên tập gốc) có 6.206 khách đủ điều kiện xét, trong đó 1.050 người rời bỏ (16,9\%) và 5.156 ở lại (83,1\%); trên tập đã lọc đơn hủy và đơn âm (V04c) là 1.080 trên 6.148 (17,6\%). Nhìn lại toàn bộ lịch sử mua (V04g, chỉ để mô tả hồi cứu, không dùng làm biến dự báo), người rời bỏ trung bình có 1,6 đơn và khoảng cách từ đơn đầu đến đơn cuối là 104 ngày; người ở lại có 2,6 đơn và 547 ngày.
+
+Nếu áp dụng cùng nguyên tắc ``đủ thời gian quan sát'' cho ngưỡng 6 tháng (mốc 31/12/2013, kỳ kiểm tra 01/01--30/06/2014; V04d), có 13.097 khách đủ điều kiện và 8.765 người (66,9\%) không mua trong kỳ kiểm tra. Con số này cao hơn hẳn 16,9\% của ngưỡng 12 tháng không phải vì hai cách tính mâu thuẫn, mà vì hai tập khách đủ điều kiện khác nhau: ngưỡng 6 tháng đưa thêm 6.891 khách mới của nửa cuối 2013, hầu hết mới mua một chiếc xe và chưa quay lại trong sáu tháng. Điều này cho thấy tỷ lệ rời bỏ phụ thuộc mạnh vào ngưỡng và vào nhóm khách gia nhập, và mọi so sánh giữa các ngưỡng phải nêu rõ cả hai.
+
+Việc tách một giai đoạn theo dõi và một giai đoạn kiểm tra là cách làm quen thuộc trong nghiên cứu khách hàng không hợp đồng: Fader, Hardie và Lee (2005) ước lượng mô hình trên kỳ hiệu chuẩn rồi đánh giá trên kỳ giữ lại; Reinartz và Kumar (2000) cũng xác định khách còn hoạt động hay không dựa trên hành vi mua sau một mốc thời gian. Các nghiên cứu này không quy định ngưỡng 12 tháng; con số 12 tháng ở đây là lựa chọn của nhóm, dựa trên việc khách cá nhân của CompanyX quay lại trung bình sau 317 ngày và dữ liệu chỉ còn đúng 12 tháng sau mốc.
+
+Cần nói rõ đây là \emph{nhãn rời bỏ theo quy ước quan sát 12 tháng}, không phải bằng chứng khách đã rời bỏ vĩnh viễn. Mục~\ref{sec:how} cho thấy 38\% số lần quay lại của khách cá nhân cách lần mua trước hơn một năm, và trong toàn bộ dữ liệu có 3.486 khách từng quay lại sau khoảng nghỉ dài hơn 365 ngày. Một phần khách bị gắn nhãn ``rời bỏ'' vì thế vẫn có thể mua tiếp sau khi dữ liệu kết thúc. Quy ước 12 tháng là sự đánh đổi: cửa sổ ngắn hơn sẽ gắn nhãn sai nhiều khách chỉ mua thưa, cửa sổ dài hơn sẽ không còn đủ dữ liệu để kiểm tra. Khi có thêm dữ liệu, nên thử lại với cửa sổ 18 hoặc 24 tháng.
+
+Một nguyên tắc quan trọng khi tính các chỉ tiêu ở những mục sau: mọi đặc điểm dùng để so sánh nhóm rời bỏ và nhóm ở lại (số lần mua, loại hàng đã mua) đều \emph{chỉ tính trên giai đoạn theo dõi}, tức trước mốc 30/06/2013. Nếu tính cả giai đoạn kiểm tra thì bản thân đặc điểm đã chứa kết quả cần dự báo, và mọi so sánh sẽ vô nghĩa.
+
+\subsection{Đại lý rời bỏ nhiều gần gấp đôi khách cá nhân}
+Tỷ lệ rời bỏ của đại lý là 28,6\% (153 trên 535), so với 15,8\% ở khách cá nhân (897 trên 5.671). Nhóm khách mang lại 74\% doanh thu lại là nhóm rời bỏ nhiều nhất. Dữ liệu không cho biết đại lý ngừng mua vì lý do gì, nhưng vì họ vốn đặt hàng gần như mỗi quý, một đại lý không đặt hàng suốt 12 tháng là sự gián đoạn lớn so với nhịp mua thông thường của họ. Điều này đặt ra câu hỏi cho giai đoạn sau: với đại lý, có nên dùng ngưỡng ngắn hơn 12 tháng, ví dụ một hoặc hai kỳ đặt hàng bị bỏ qua, để định nghĩa rời bỏ hay không.
+
+\subsection{Khách tại Úc có tỷ lệ rời bỏ quan sát thấp nhất}
+Tỷ lệ rời bỏ theo lãnh thổ chênh nhau tới 10 lần (Hình~\ref{fig:churn-territory}): Canada 42\%, Southeast 38\%, Central 37\%, ba vùng Northwest, Southwest, Northeast khoảng 27\%; Pháp 16\%, Đức 11\%, Anh 9\%; Úc chỉ 4\%.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  xbar, bar width=7pt, width=0.9\textwidth, height=7.2cm,
+  xlabel={Tỷ lệ rời bỏ (\%)}, xmin=0, xmax=50,
+  symbolic y coords={Australia,United Kingdom,Germany,France,Northeast,Southwest,Northwest,Central,Southeast,Canada},
+  ytick=data, y tick label style={font=\scriptsize}, xmajorgrids, grid style={gray!25},
+  nodes near coords, nodes near coords align={horizontal}, every node near coord/.append style={font=\scriptsize},
+  enlarge y limits=0.07
+]
+\addplot[fill=cChurn, draw=cChurn!70!black] coordinates {(4.0,Australia) (8.9,United Kingdom) (10.8,Germany) (15.9,France) (26.7,Northeast) (26.8,Southwest) (27.1,Northwest) (37.3,Central) (38.0,Southeast) (42.2,Canada)};
+\end{axis}
+\end{tikzpicture}
+\caption{Tỷ lệ rời bỏ theo lãnh thổ (trong 6.206 khách đủ điều kiện xét).}
+\label{fig:churn-territory}
+\end{figure}
+
+Một phần khác biệt đến từ cơ cấu khách: Bắc Mỹ có nhiều đại lý, nhóm rời bỏ cao, còn Úc gần như toàn khách online. Nhưng ngay giữa các thị trường online tương tự nhau như Úc với Anh, Pháp, Đức, Úc vẫn thấp hơn rõ rệt. Dữ liệu hiện có chưa giải thích được điều này; mức độ cạnh tranh hay chính sách bán hàng ở từng thị trường là những hướng đáng tìm hiểu ở các phần sau.
+
+\subsection{Số lần mua trước mốc và tỷ lệ rời bỏ}
+\label{sec:freq-churn}
+Theo mô hình RFM, khách đã mua nhiều lần thường được kỳ vọng gắn bó hơn. Dữ liệu CompanyX lại cho kết quả ngược lại khi số lần mua chỉ được đếm trong giai đoạn theo dõi (Bảng~\ref{tab:churn-freq}). Trong 5.671 khách cá nhân đủ điều kiện xét, 5.357 người mới mua đúng một lần trước mốc và 13,4\% trong số họ rời bỏ; 311 người đã mua hai lần trước mốc thì có tới 57,2\% rời bỏ. Với đại lý, tỷ lệ rời bỏ cao nhất ở nhóm đã đặt 3--5 đơn (34,2\%) và thấp hơn ở nhóm đặt từ 6 đơn (23,0\%).
+
+\begin{table}[H]
+\centering
+\caption{Tỷ lệ rời bỏ theo số lần mua trong giai đoạn theo dõi (trước 30/06/2013)}
+\label{tab:churn-freq}
+\small
+\begin{tabular}{llrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Nhóm khách} & \textbf{Số lần mua trước mốc} & \textbf{Đủ điều kiện} & \textbf{Rời bỏ} & \textbf{Tỷ lệ} \\
+\midrule
+Khách cá nhân & 1 lần & 5.357 & 719 & 13,4\% \\
+Khách cá nhân & 2 lần & 311 & 178 & 57,2\% \\
+Đại lý & 1--2 lần & 147 & 34 & 23,1\% \\
+Đại lý & 3--5 lần & 266 & 91 & 34,2\% \\
+Đại lý & 6 lần trở lên & 122 & 28 & 23,0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Kết quả này giữ nguyên chiều hướng trong từng nhóm khách gia nhập: với khách cá nhân mua lần đầu năm 2011, tỷ lệ rời bỏ là 19\% ở nhóm một lần và 41\% ở nhóm hai lần; năm 2012 là 7\% và 70\%; nửa đầu 2013 là 20\% và 63\%. Vậy đây không đơn thuần là chuyện khách cũ đã ``hết chu kỳ''.
+
+Nhóm chưa có đủ dữ liệu để giải thích chắc chắn. Một cách hiểu hợp lý là với hàng lâu bền, lần mua thứ hai trong vòng hai năm đầu thường đã đáp ứng trọn nhu cầu (ví dụ mua xe rồi mua nốt phụ kiện đi kèm), nên khách không còn lý do quay lại; trong khi khách mới mua một chiếc xe vẫn còn nhu cầu mua thêm. Cũng cần lưu ý AdventureWorks là dữ liệu mô phỏng, và hành vi trong đó có thể không giống hoàn toàn khách hàng thực. Dù giải thích nào đúng, kết luận thực tiễn là số lần mua trong quá khứ \emph{không} thể dùng một mình như chỉ báo gắn bó ở CompanyX; mô hình dự đoán sau này cần xét nó cùng với thời điểm gia nhập và loại hàng đã mua.
+
+Bản nháp đầu của báo cáo từng đưa ra kết luận ngược lại (khách đã mua lần hai chỉ rời bỏ dưới 5\%). Sai sót nằm ở chỗ số lần mua khi đó được đếm trên toàn bộ dữ liệu, kể cả giai đoạn kiểm tra, nên ai có đơn sau mốc đều vừa được đếm thêm một lần mua vừa được gắn nhãn ở lại. Đây là lỗi rò rỉ dữ liệu điển hình và đã được sửa.
+
+\subsection{Loại hàng đã mua trước mốc và tỷ lệ rời bỏ}
+Cùng nguyên tắc chỉ dùng thông tin trước mốc, nhóm xét loại hàng mà 5.671 khách cá nhân đủ điều kiện đã mua trong giai đoạn theo dõi (truy vấn V06a, V06b). Vì một khách có thể mua nhiều danh mục, Bảng~\ref{tab:churn-cat} trình bày cả cách đếm theo từng danh mục (không loại trừ nhau) và cách chia thành hai nhóm loại trừ nhau.
+
+\begin{table}[H]
+\centering
+\caption{Tỷ lệ rời bỏ theo loại hàng đã mua trong giai đoạn theo dõi (khách cá nhân)}
+\label{tab:churn-cat}
+\small
+\begin{tabularx}{\textwidth}{X r r r}
+\toprule
+\rowcolor{tblhead} \textbf{Nhóm} & \textbf{Số khách} & \textbf{Rời bỏ} & \textbf{Tỷ lệ} \\
+\midrule
+\multicolumn{4}{l}{\emph{Theo danh mục (một khách có thể thuộc nhiều dòng)}} \\
+Đã mua xe đạp & 5.636 & 879 & 15,6\% \\
+Đã mua phụ kiện & 428 & 290 & 67,8\% \\
+Đã mua quần áo & 166 & 124 & 74,7\% \\
+\midrule
+\multicolumn{4}{l}{\emph{Hai nhóm loại trừ nhau}} \\
+Chỉ mua xe đạp (chưa mua phụ kiện/quần áo) & 5.184 & 556 & 10,7\% \\
+Có mua phụ kiện hoặc quần áo & 487 & 341 & 70,0\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Kết quả trái với kỳ vọng ban đầu và trùng lắp nhiều với Bảng~\ref{tab:churn-freq}: trong 314 khách đã mua hai lần trở lên trước mốc có 272 người đã mua phụ kiện hoặc quần áo (V06c). Nói cách khác, ``đã mua lần hai'' và ``đã mua phụ kiện'' phần lớn là cùng một nhóm khách, và cả hai đi kèm tỷ lệ rời bỏ cao trong kỳ kiểm tra.
+
+Phát hiện ở Mục~\ref{sec:what} rằng phụ kiện là danh mục có nhiều khách mua nhất vẫn đúng, nhưng dữ liệu hiện có không cho phép kết luận việc mua phụ kiện giúp giữ chân khách. Nếu muốn dùng phụ kiện làm công cụ giữ chân, đó phải là một giả thuyết để thử nghiệm (ví dụ so sánh hai nhóm khách được và không được mời mua phụ kiện), chứ không phải kết luận rút ra từ dữ liệu lịch sử.
+
+\subsection{Chênh lệch tỷ lệ rời bỏ theo đặc điểm nhân khẩu học}
+Bảng~\ref{tab:churn-demo} và Hình~\ref{fig:churn-income} tổng hợp tỷ lệ rời bỏ của 5.671 khách cá nhân đủ điều kiện xét theo từng đặc điểm (truy vấn V07a). Mỗi ô ghi tỷ lệ rời bỏ kèm số khách rời bỏ trên tổng số khách của nhóm. Tuổi được tính tại mốc 30/06/2013; các đặc điểm khác lấy từ khảo sát, không có ngày ghi nhận, nên được xem là không đổi trong kỳ.
+
+\begin{table}[H]
+\centering
+\caption{Tỷ lệ rời bỏ theo đặc điểm cá nhân (rời bỏ / tổng số khách của nhóm)}
+\label{tab:churn-demo}
+\footnotesize
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.6cm} X c}
+\toprule
+\rowcolor{tblhead} \textbf{Đặc điểm} & \textbf{Tỷ lệ rời bỏ theo nhóm} & \textbf{Chênh lệch} \\
+\midrule
+Thu nhập/năm & Dưới 25k: 10,2\% (82/805) -- 25--50k: 23,2\% (390/1.681) -- 50--75k: 20,4\% (332/1.624) -- 75--100k: 5,9\% (55/931) -- Trên 100k: 6,0\% (38/630) & 17 điểm \\
+Nghề nghiệp & Lao động kỹ thuật: 25,9\% (339/1.308) -- Văn phòng: 16,7\% (171/1.027) -- Chuyên môn: 13,3\% (231/1.743) -- Phổ thông: 12,2\% (78/641) -- Quản lý: 8,2\% (78/952) & 18 điểm \\
+Số xe hơi & 0: 17,5\% (274/1.568) -- 1: 19,0\% (308/1.624) -- 2: 15,0\% (243/1.616) -- 3: 10,4\% (52/498) -- 4: 5,5\% (20/365) & 13 điểm \\
+Số con & 0: 12,8\% (221/1.721) -- 1: 21,3\% (278/1.305) -- 2: 16,1\% (204/1.266) -- 3: 14,2\% (89/628) -- 4: 14,6\% (71/486) -- 5: 12,8\% (34/265) & 8 điểm \\
+Có nhà riêng & Không: 19,6\% (347/1.769) -- Có: 14,1\% (550/3.902) & 6 điểm \\
+Học vấn & Cử nhân: 11,5\% (217/1.883) -- Cao đẳng dở dang: 17,8\% (278/1.558) -- Sau đại học: 17,8\% (175/985) -- Trung học: 18,3\% (165/903) -- Trung học dở dang: 18,1\% (62/342) & 7 điểm \\
+Độ tuổi (tại 30/06/2013) & Dưới 40: 14,5\% (111/766) -- 40--49: 16,4\% (355/2.160) -- 50--59: 16,6\% (284/1.710) -- 60+: 14,2\% (147/1.035) & 2 điểm \\
+Giới tính & Nữ: 15,3\% (436/2.855) -- Nam: 16,4\% (461/2.816) & 1 điểm \\
+Hôn nhân & Đã kết hôn: 15,7\% (450/2.870) -- Độc thân: 16,0\% (447/2.801) & 0 điểm \\
+Đăng ký email khuyến mãi & Không: 14,9\% (462/3.099) -- Chỉ AdventureWorks: 17,8\% (268/1.506) -- Cả đối tác: 15,7\% (167/1.066) & 3 điểm \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=18pt, width=0.8\textwidth, height=5.5cm,
+  ylabel={Tỷ lệ rời bỏ (\%)}, xlabel={Thu nhập năm (USD)},
+  symbolic x coords={i1,i2,i3,i4,i5},
+  xtick=data, xticklabels={Dưới 25k,25--50k,50--75k,75--100k,Trên 100k},
+  ymin=0, ymax=30, ymajorgrids, grid style={gray!25},
+  nodes near coords, every node near coord/.append style={font=\scriptsize}, enlarge x limits=0.15
+]
+\addplot[fill=cChurn, draw=cChurn!70!black] coordinates {(i1,10.2) (i2,23.2) (i3,20.4) (i4,5.9) (i5,6.0)};
+\end{axis}
+\end{tikzpicture}
+\caption{Tỷ lệ rời bỏ theo thu nhập: nhóm thu nhập trung bình rời bỏ nhiều nhất.}
+\label{fig:churn-income}
+\end{figure}
+
+Chênh lệch lớn nhất nằm ở các đặc điểm kinh tế. Khách thu nhập 25--75 nghìn USD, làm lao động kỹ thuật hoặc văn phòng, chưa có nhà và có ít xe hơi có tỷ lệ rời bỏ cao gấp 2--4 lần nhóm thu nhập trên 75 nghìn hoặc làm quản lý. Nhóm thu nhập thấp nhất (dưới 25 nghìn) lại có tỷ lệ rời bỏ thấp (10,2\%). Đây là các tương quan quan sát được trong mẫu; dữ liệu không có biến về động cơ mua hay mức nhạy giá của từng khách, nên báo cáo không suy ra nguyên nhân. Mối liên hệ giữa thu nhập, lý do mua ``giá cả'' và việc rời bỏ là một giả thuyết để kiểm tra bằng phân tích nhiều biến ở giai đoạn sau.
+
+Tuổi, giới tính và tình trạng hôn nhân cho chênh lệch chỉ 0--2 điểm phần trăm giữa các nhóm. Với cỡ mẫu vài nghìn khách mỗi nhóm, chênh lệch nhỏ như vậy chưa cho thấy mối liên hệ đáng kể trong phân tích đơn biến; báo cáo chưa thực hiện kiểm định thống kê nên không kết luận ``không có liên hệ'', chỉ ghi nhận rằng các đặc điểm này không phân biệt được hai nhóm ở mức mô tả. Với email khuyến mãi, dữ liệu chỉ ghi khách có đăng ký hay không (0, 1, 2), không ghi khách thực sự nhận hay mở email nào, nên bảng trên không đánh giá được hiệu quả chương trình email; nó chỉ cho thấy trạng thái đăng ký không đi kèm tỷ lệ ở lại cao hơn.
+
+Xu hướng chung, đặc điểm hành vi (Bảng~\ref{tab:churn-freq}, \ref{tab:churn-cat}) tạo ra chênh lệch lớn hơn nhiều so với đặc điểm cá nhân, phù hợp với kết quả của Buckinx và Van den Poel (2005) trong bán lẻ không hợp đồng, dù chiều của mối liên hệ ở CompanyX khác với nghiên cứu đó.
+
+\subsection{Tổng hợp: dấu hiệu nào đi kèm với việc rời bỏ?}
+\begin{table}[H]
+\centering
+\caption{Xếp hạng sơ bộ các dấu hiệu theo mức độ phân biệt khách ở lại và khách rời bỏ}
+\label{tab:factor-rank}
+\small
+\begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}p{4.2cm} X c}
+\toprule
+\rowcolor{tblhead} \textbf{\#} & \textbf{Dấu hiệu} & \textbf{Bằng chứng} & \textbf{Mức độ} \\
+\midrule
+1 & Đã mua phụ kiện/quần áo trước mốc (cá nhân) & 70,0\% so với 10,7\% & Rất mạnh \\
+2 & Đã mua 2 lần trước mốc (cá nhân) & 57,2\% so với 13,4\% & Rất mạnh \\
+3 & Thị trường & Úc 4\% $\leftrightarrow$ Canada 42\% & Rất mạnh \\
+4 & Là đại lý & 28,6\% so với 15,8\% & Mạnh \\
+5 & Thu nhập trung bình & 6\% $\leftrightarrow$ 23\% & Mạnh \\
+6 & Nghề lao động kỹ thuật / văn phòng & 8\% $\leftrightarrow$ 26\% & Mạnh \\
+7 & Chưa có nhà, ít xe hơi & 6\% $\leftrightarrow$ 19\% & Trung bình \\
+8 & Tuổi, giới tính, hôn nhân, đăng ký email & Chênh lệch dưới 3 điểm & Không đáng kể \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Mỗi dấu hiệu ở đây được xét riêng lẻ, và chúng chồng lên nhau ở nhiều chỗ: hai dấu hiệu đầu gần như là một, thị trường Bắc Mỹ và nhóm đại lý cũng vậy. Tất cả đều là tương quan quan sát được trong mẫu, chưa phải quan hệ nhân quả. Tách xem dấu hiệu nào thực sự có tác động độc lập là việc của phần xây dựng mô hình ở giai đoạn sau, và mọi đặc điểm đưa vào mô hình phải được tính trước mốc gắn nhãn như đã làm ở đây.
+
+% =====================================================================
+\section{Giới hạn của dữ liệu và đầu vào cho giai đoạn tiếp theo}
+\label{sec:limits}
+\subsection{Dữ liệu có đủ điều kiện để nghiên cứu churn không?}
+Có, với các điều kiện sau. Kho dữ liệu có lịch sử giao dịch đầy đủ ở cấp đơn và dòng hàng trong 37 tháng, có hồ sơ nhân khẩu học cho toàn bộ khách cá nhân và hồ sơ cửa hàng cho toàn bộ đại lý, các liên kết giữa bảng còn nguyên vẹn, và tỷ lệ bản ghi cần loại dưới 1\%. Những yếu tố này đủ để tạo nhãn rời bỏ theo quy ước và tính các đặc trưng hành vi tại một mốc thời gian.
+
+\subsection{Những giới hạn cần ghi nhận}
+\begin{itemize}
+    \item \textbf{Không có nhãn rời bỏ thật.} Nhãn 12 tháng là quy ước; 3.486 khách trong dữ liệu từng quay lại sau hơn một năm nghỉ, nên một phần khách gắn nhãn ``rời bỏ'' có thể chỉ mua thưa.
+    \item \textbf{Mất cân đối thời gian.} 76\% đơn hàng dồn vào 12 tháng cuối; chỉ 6.206 trong 19.119 khách có đủ thời gian quan sát. Kết quả về rời bỏ vì thế phản ánh nhóm khách gia nhập trước giữa 2013, không đại diện cho toàn bộ khách.
+    \item \textbf{Chỉ có một kỳ kiểm tra.} Dữ liệu kết thúc ngày 30/06/2014 nên không thể kiểm tra lại với mốc khác hoặc cửa sổ dài hơn.
+    \item \textbf{Thiếu biến về động cơ và tương tác.} Không có dữ liệu về khiếu nại, trả hàng, tương tác marketing thực tế, giá của đối thủ; lý do mua chỉ có ở kênh online và do khách tự khai.
+    \item \textbf{Dữ liệu mô phỏng.} CompanyX là AdventureWorks; một số quan hệ (ví dụ khách mua hai lần trước mốc rời bỏ nhiều hơn) có thể là đặc điểm của cách sinh dữ liệu chứ không phải hành vi thực.
+    \item \textbf{Chưa kiểm định thống kê và chưa phân tích nhiều biến.} Mọi chênh lệch trong báo cáo là mô tả đơn biến.
+\end{itemize}
+
+\subsection{Đầu vào cho các phần tiếp theo}
+Từ phân tích này, các phần Problem Statement, mô hình hóa và thiết kế hệ hỗ trợ quyết định có thể dùng: (i) định nghĩa nhãn rời bỏ theo mốc 30/06/2013 và kỳ kiểm tra 12 tháng, kèm nguyên tắc mọi đặc trưng phải tính trước mốc; (ii) tập phân tích 6.206 khách (hoặc 6.148 nếu loại đơn hủy và đơn âm) với nhãn 16,9\% (17,6\%); (iii) danh sách bảng và cột nguồn ở Mục~\ref{sec:overview}; (iv) các câu hỏi còn mở: vì sao khách tại Úc có tỷ lệ rời bỏ thấp hơn hẳn các thị trường online tương tự; vì sao khách đã mua hai lần hoặc đã mua phụ kiện trước mốc lại rời bỏ nhiều hơn; đại lý có nên dùng ngưỡng ngắn hơn 12 tháng không; và liệu thu nhập, lý do mua ``giá cả'' và việc rời bỏ có liên hệ với nhau khi xét đồng thời.
+
+% =====================================================================
+\section{Kết luận}
+Kho dữ liệu CompanyX là bộ AdventureWorks với 72 bảng và 24 view, trong đó khoảng 10 bảng thuộc hai nhóm Sales và Person đủ để mô tả khách hàng và lịch sử mua. Dữ liệu sạch, các liên kết đầy đủ, và chỉ cần loại chưa tới 1\% bản ghi (701 dòng khách không có đơn, 315 đơn hủy, 2 đơn âm).
+
+Khách hàng gồm hai nhóm rất khác nhau: 18.484 khách cá nhân mua online, phần lớn chỉ mua một lần với giá trị trung bình 1.755 USD mỗi khách trong 37 tháng; và 635 đại lý đặt hàng gần như mỗi quý, trung bình 142.856 USD mỗi đại lý, chiếm 74\% tổng phải trả. Xe đạp chiếm 86\% doanh thu trước thuế; phụ kiện chiếm 1\% doanh thu nhưng có nhiều khách mua nhất. Ở kênh online, ba phần tư đơn có ghi lý do mua nêu ``giá cả''.
+
+Dữ liệu không có nhãn rời bỏ; theo quy ước mốc 30/06/2013 và kỳ kiểm tra 12 tháng, 1.050 trong 6.206 khách đủ điều kiện (16,9\%) không mua lại. Tỷ lệ này là 28,6\% ở đại lý và 15,8\% ở khách cá nhân; chênh nhau tới 10 lần giữa các lãnh thổ (Úc 4,0\%, Canada 42,2\%). Khi chỉ dùng thông tin trước mốc, khách cá nhân đã mua hai lần hoặc đã mua phụ kiện lại có tỷ lệ rời bỏ cao hơn nhiều so với khách mới mua một chiếc xe (57--70\% so với 11--13\%); bản nháp đầu đã kết luận ngược lại do tính đặc trưng trên cả kỳ kiểm tra, và sai sót đó đã được sửa. Thu nhập, nghề nghiệp và tài sản cho chênh lệch 13--18 điểm phần trăm; tuổi, giới tính, hôn nhân dưới 2 điểm. Tất cả là tương quan đơn biến trong mẫu.
+
+Dữ liệu đủ điều kiện để bước sang giai đoạn nghiên cứu churn, với các giới hạn về nhãn quy ước, mất cân đối thời gian, thiếu biến động cơ và bản chất mô phỏng của dữ liệu đã nêu ở Mục~\ref{sec:limits}.
+
+\newpage
+\addcontentsline{toc}{section}{Tài liệu tham khảo}
+\begin{thebibliography}{99}
+\bibitem{aw}
+Microsoft. \textit{AdventureWorks sample databases}. \url{https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure}, truy cập ngày 15/09/2026.
+\bibitem{hughes}
+Hughes, A. M. (1994). \textit{Strategic Database Marketing}. Probus Publishing, Chicago.
+\bibitem{fader}
+Fader, P. S., Hardie, B. G. S. \& Lee, K. L. (2005). ``Counting your customers'' the easy way: An alternative to the Pareto/NBD model. \textit{Marketing Science}, 24(2), 275--284.
+\bibitem{reinartz}
+Reinartz, W. J. \& Kumar, V. (2000). On the profitability of long-life customers in a noncontractual setting: An empirical investigation and implications for marketing. \textit{Journal of Marketing}, 64(4), 17--35.
+\bibitem{reichheld}
+Reichheld, F. F. \& Sasser, W. E. (1990). Zero defections: Quality comes to services. \textit{Harvard Business Review}, 68(5), 105--111.
+\bibitem{buckinx}
+Buckinx, W. \& Van den Poel, D. (2005). Customer base analysis: Partial defection of behaviourally loyal clients in a non-contractual FMCG retail setting. \textit{European Journal of Operational Research}, 164(1), 252--268.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,248 @@
+Changed database context to 'CompanyX'.
+--- V01a: Thành ph?n doanh thu c?p don (Sales.SalesOrderHeader, toàn b? 31.465 don) ---
+31465|109784735.90|10186974.46|3183430.25|123155140.61
+
+--- V01b: Doanh thu c?p dòng hàng (Sales.SalesOrderDetail.LineTotal) ---
+121317|109784735.89
+
+--- V01c: S? don có SubTotal khác t?ng LineTotal (ki?m tra nh?t quán) ---
+0
+
+--- V01d: Doanh thu dòng hàng theo danh m?c l?n; dòng không có danh m?c ---
+Bikes|9719|40031|90221|94597297.06
+Components|580|18698|49032|11796253.20
+Clothing|7327|21394|73651|2119738.53
+Accessories|15461|41194|61920|1271447.10
+
+Warning: Null value is eliminated by an aggregate or other SET operation.
+--- V02a: Mã tr?ng thái don ---
+5|31150|121978690.44
+6|315|1176450.17
+
+--- V02b: Ðon có TotalDue < 0 ho?c SubTotal < 0 ---
+43678|29889|2011-05-31 00:00:00.000|5|0|-9799.92|942.07|294.40|-8563.45|19|-9799.92
+43682|29759|2011-05-31 00:00:00.000|5|0|-3875.72|371.80|116.19|-3387.74|5|-3875.72
+
+--- V02c: Ba nhóm b?n ghi trong Sales.Customer ---
+Store contact|635|635
+PersonID NULL|701|0
+Individual|18484|18484
+
+--- V02d: Trùng khóa? ---
+0|0|0|90|0
+
+--- V02e: Tru?c / sau x? lý (lo?i Status=6 và TotalDue<0) ---
+Truoc|19119|31465|121317|109784735.90|123155140.61
+Sau|18995|31148|120123|108748471.69|121990641.63
+
+--- V03: Kênh / lo?i khách: s? khách, s? don, doanh thu, TB m?i don, TB m?i khách ---
+Store|635|3806|80426058.68|90713801.49|23834.42|142856.38|5.99
+Individual|18484|27659|29358677.22|32441339.12|1172.90|1755.10|1.50
+
+--- V03b: OnlineOrderFlag trùng v?i lo?i khách? ---
+Individual|1|27659
+Store|0|3806
+
+--- V03c: Pareto 20/80 (ngu phân v? theo t?ng TotalDue m?i khách) ---
+1|3824|110529926.50|89.7
+2|3824|10110245.12|8.2
+3|3824|2138622.53|1.7
+4|3824|280984.88|0.2
+5|3823|95361.58|0.1
+
+--- V04a: Có c?t nhãn churn nào trong DB? (tìm tên c?t ch?a churn/active/status ? nhóm Sales.Customer) ---
+Purchasing.Vendor|ActiveFlag
+
+--- V04b: Nhãn churn theo quy u?c: d? di?u ki?n = don d?u <= 2013-06-30; churn = không có don 2013-07-01..2014-06-30 ---
+6206|1050|5156
+
+--- V04c: Cùng nhãn, ch? tính don Status=5 và TotalDue>=0 ---
+6148|1080
+
+--- V04d: So sánh ngu?ng 6 tháng v?i di?u ki?n d? th?i gian quan sát nh?t quán (m?c 2013-12-31, k? ki?m tra 2014-01-01..2014-06-30) ---
+13097|8765
+
+--- V04e: Nhãn theo c?a s? im l?ng tính t? cu?i d? li?u (không có di?u ki?n d? th?i gian) ---
+8765|1016|19119
+
+--- V04f: Churn theo lo?i khách và theo lãnh th? (nhãn V04b) ---
+territory|Australia|78|1933
+territory|Southwest|308|1148
+territory|Northwest|210|774
+territory|United Kingdom|56|628
+territory|Germany|60|553
+territory|France|86|542
+territory|Canada|191|453
+territory|Southeast|27|71
+territory|Central|22|59
+territory|Northeast|12|45
+type|Individual|897|5671
+type|Store|153|535
+
+--- V04g: Tenure & s? don trung bình theo nhãn (tính trên toàn b? d? li?u, ch? d? mô t? h?i c?u) ---
+Active|5156|2.62|547.1
+Churn|1050|1.61|104.2
+
+--- V05a: S? l?n mua TRU?C M?C và churn (không rò r?) ---
+Individual|1|719|5357
+Individual|2|178|311
+Individual|3-5|0|3
+Store|1|21|121
+Store|2|13|26
+Store|3-5|91|266
+Store|6+|28|122
+
+--- V05b: S? l?n mua TOÀN B? D? LI?U và churn (cách tính cu, b? rò r?) - d? d?i chi?u 740/4004 ---
+1|740|740
+2|191|4004
+3-5|91|1160
+6+|28|302
+
+--- V05c: Cohort (nam don d?u) x s? l?n mua tru?c m?c, khách cá nhân ---
+2011|1|204|1071
+2011|2+|53|130
+2012|1|176|2622
+2012|2+|85|121
+2013H1|1|339|1664
+2013H1|2+|40|63
+
+--- V06a: Danh m?c dã mua TRU?C M?C (khách cá nhân, m?t khách có th? thu?c nhi?u danh m?c) ---
+Bikes|879|5636
+Accessories|290|428
+Clothing|124|166
+
+--- V06b: Hai nhóm lo?i tr? nhau: ch? mua xe tru?c m?c vs có mua ph? ki?n/qu?n áo tru?c m?c (khách cá nhân) ---
+Chi mua xe (hoac linh kien) truoc moc|556|5184
+Co mua phu kien/quan ao truoc moc|341|487
+
+--- V06c: Trùng l?p gi?a nhóm "2 l?n tru?c m?c" và nhóm "có ph? ki?n tru?c m?c" (khách cá nhân) ---
+1|0|5142
+1|1|215
+2+|0|42
+2+|1|272
+
+--- V06d: Danh m?c toàn b? d? li?u: s? khách và s? khách thu?c >1 danh m?c (online) ---
+1|7892
+2|8570
+3|2022
+
+--- V07a: Nhân kh?u h?c x churn (khách cá nhân d? di?u ki?n). Tu?i tính t?i 2013-06-30 (m?c) ---
+Age@2013-06-30|<40|111|766|14.5
+Age@2013-06-30|40-49|355|2160|16.4
+Age@2013-06-30|50-59|284|1710|16.6
+Age@2013-06-30|60+|147|1035|14.2
+Cars|0|274|1568|17.5
+Cars|1|308|1624|19.0
+Cars|2|243|1616|15.0
+Cars|3|52|498|10.4
+Cars|4|20|365|5.5
+Children|0|221|1721|12.8
+Children|1|278|1305|21.3
+Children|2|204|1266|16.1
+Children|3|89|628|14.2
+Children|4|71|486|14.6
+Children|5|34|265|12.8
+Education|Bachelors|217|1883|11.5
+Education|Graduate Degree|175|985|17.8
+Education|High School|165|903|18.3
+Education|Partial College|278|1558|17.8
+Education|Partial High School|62|342|18.1
+EmailPromotion|0|462|3099|14.9
+EmailPromotion|1|268|1506|17.8
+EmailPromotion|2|167|1066|15.7
+Gender|F|436|2855|15.3
+Gender|M|461|2816|16.4
+HomeOwner|0|347|1769|19.6
+HomeOwner|1|550|3902|14.1
+Income|0-25000|82|805|10.2
+Income|25001-50000|390|1681|23.2
+Income|50001-75000|332|1624|20.4
+Income|75001-100000|55|931|5.9
+Income|greater than 100000|38|630|6.0
+Marital|M|450|2870|15.7
+Marital|S|447|2801|16.0
+Occupation|Clerical|171|1027|16.7
+Occupation|Management|78|952|8.2
+Occupation|Manual|78|641|12.2
+Occupation|Professional|231|1743|13.3
+Occupation|Skilled Manual|339|1308|25.9
+
+--- V07b: Phân b? nhân kh?u h?c toàn b? khách cá nhân (18.484), tu?i t?i 2014-06-30 ---
+<40|2267
+40-49|6108
+50-59|5362
+60+|4747
+
+1910-08-13 00:00:00.000|1980-12-26 00:00:00.000
+
+Warning: Null value is eliminated by an aggregate or other SET operation.
+--- V08a: Lý do mua: d? bao ph? (don có >=1 lý do) và s? lý do m?i don ---
+31465|23012|27647
+
+1|18530
+2|4329
+3|153
+
+--- V08b: Lý do mua theo kênh: s? dòng lý do, s? don, s? khách ---
+Price|Other|1|17473|17473|14529
+On Promotion|Promotion|1|3515|3515|3121
+Manufacturer|Other|1|1746|1746|1722
+Quality|Other|1|1551|1551|1551
+Other|Other|1|1395|1395|1337
+Review|Other|1|1245|1245|1218
+Television  Advertisement|Marketing|1|722|722|657
+
+--- V08c: Khuy?n mãi: dòng hàng theo SpecialOffer.Category và kênh ---
+No Discount|0|57637|3792
+Reseller|0|3282|916
+No Discount|1|58247|27119
+Reseller|1|2151|2104
+
+--- V09a: Ðon theo quý, tách kênh ---
+2011|2|146|36|182
+2011|3|463|175|638
+2011|4|592|193|785
+2012|1|594|265|859
+2012|2|673|281|954
+2012|3|705|317|1022
+2012|4|771|311|1082
+2013|1|852|314|1166
+2013|2|1192|383|1575
+2013|3|4866|454|5320
+2013|4|5674|447|6121
+2014|1|5847|449|6296
+2014|2|5284|181|5465
+
+--- V09b: Ðon online theo tháng x nam (mùa v? có b? tang tru?ng che l?p?) ---
+1|0|193|294|1966
+2|0|182|251|1753
+3|0|219|307|2128
+4|0|201|326|2113
+5|5|221|333|2232
+6|141|251|533|939
+7|156|274|1564|0
+8|150|212|1690|0
+9|157|219|1612|0
+10|174|207|1792|0
+11|230|318|2007|0
+12|188|246|1875|0
+
+--- V10a: B?ng vs view; s? c?t; cardinality b?ng c?u lý do mua ---
+tables|72
+views|24
+
+PK_SalesOrderHeaderSalesReason_SalesOrderID_SalesReasonID|1|SalesOrderID,SalesReasonID
+
+--- V11: Kho?ng cách gi?a hai l?n mua liên ti?p (khách cá nhân online) ---
+9175|3472|317.1|6865
+
+98.7|3171
+
+--- V12: S? don m?i khách (toàn b?) ---
+1|11649
+2|5473
+3|1204
+4-5|456
+6-12|302
+13+|35
+
