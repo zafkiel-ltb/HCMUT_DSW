@@ -1,9 +1,25 @@
 \documentclass[a4paper,12pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T5]{fontenc}
-\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T5]{fontenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  \setmainfont{lmroman12-regular.otf}[
+    BoldFont=lmroman12-bold.otf,
+    ItalicFont=lmroman12-italic.otf,
+    BoldItalicFont=lmroman10-bolditalic.otf]
+  \setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf]
+  % Latin Modern Mono: khai bao ro mat in dam va in nghieng, neu khong
+  % goi listings se canh bao "Font shape ... undefined" o tu khoa va chu thich SQL.
+  \setmonofont{lmmono10-regular.otf}[
+    BoldFont=lmmonolt10-bold.otf,
+    ItalicFont=lmmono10-italic.otf,
+    BoldItalicFont=lmmonolt10-boldoblique.otf]
+\fi
 \usepackage[vietnamese]{babel}
-\usepackage[left=2.5cm,right=2.5cm,top=2.2cm,bottom=3cm]{geometry}
+\usepackage[left=2.5cm,right=2.5cm,top=3.3cm,bottom=2.5cm,headsep=12pt]{geometry}
 \usepackage{graphicx}
 \usepackage{amsmath,amsfonts}
 \usepackage{tabularx}
@@ -24,20 +40,127 @@
 \usepackage{caption}
 \usepackage{setspace}
 \usepackage{titlesec}
+\usepackage{ragged2e}
+\usepackage{microtype}
+\usepackage[section]{placeins}
+\usepackage{etoolbox}
+\usepackage{listings}
+\usepackage{longtable}
+\setlength{\LTpre}{5pt}     % mac dinh \bigskipamount (12pt) - qua thua
+\setlength{\LTpost}{5pt}
+\usepackage{multirow}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{listings,skins}
 
-% ---------- Giãn dòng và khoảng cách ----------
-\onehalfspacing
-\setlength{\parskip}{6pt}
-\setlength{\parindent}{18pt}
-\renewcommand{\arraystretch}{1.35}
-\setlength{\emergencystretch}{3em}
-\captionsetup{font=small,labelfont=bf,skip=8pt}
-\setlist{itemsep=3pt, topsep=4pt}
-\titlespacing*{\section}{0pt}{12pt}{4pt}
-\titlespacing*{\subsection}{0pt}{8pt}{2pt}
-\titlespacing*{\subsubsection}{0pt}{6pt}{2pt}
-\setlength{\textfloatsep}{12pt}
-\setlength{\intextsep}{10pt}
+% ---------- Khung chep nguyen van phien chay sqlcmd ----------
+\definecolor{termbg}{HTML}{1D1F21}
+\definecolor{termfg}{HTML}{C5C8C6}
+\definecolor{termbar}{HTML}{E4E3E2}
+\definecolor{termbartx}{HTML}{4A4A4A}
+\definecolor{termcmd}{HTML}{B5BD68}
+\lstdefinestyle{termstyle}{
+  language={},                       % khong to tu khoa SQL
+  basicstyle=\ttfamily\scriptsize\color{termfg},
+  identifierstyle={}, keywordstyle={}, commentstyle={}, stringstyle={},
+  backgroundcolor={},                % nen do tcolorbox ve, khong ve lai
+  numbers=none, frame=none,          % khong so dong, khong khung phu
+  xleftmargin=0pt, xrightmargin=0pt, framexleftmargin=0pt,
+  aboveskip=0pt, belowskip=0pt,
+  columns=fixed, basewidth=0.5em, keepspaces=true,
+  breaklines=false, showstringspaces=false, upquote=true,
+  moredelim=[l][\color{termcmd}\bfseries]{\$\ }
+}
+\newtcblisting{console}[1]{
+  listing only, listing style=termstyle,
+  colback=termbg, colframe=termbg, boxrule=0pt, arc=3pt, outer arc=3pt,
+  left=6pt, right=4pt, top=5pt, bottom=4pt,
+  title={\tikz[baseline=-0.5ex]{\fill[red!70!black] (0,0) circle(1.0mm);
+         \fill[orange] (2.5mm,0) circle(1.0mm);
+         \fill[green!55!black] (5.0mm,0) circle(1.0mm);}\hfill
+         \textsf{\scriptsize #1}\hfill
+         \phantom{\tikz{\fill (0,0) circle(1.0mm);}}},
+  colbacktitle=termbar, coltitle=termbartx,
+  attach boxed title to top, boxed title style={boxrule=0pt,arc=3pt,outer arc=3pt},
+  toptitle=2pt, bottomtitle=2pt, enhanced, sharp corners=downhill,
+  before skip=6pt, after skip=6pt
+}
+
+% ---------- Trinh bay ma nguon SQL ----------
+\definecolor{lstbg}{RGB}{247,249,252}
+\definecolor{lstframe}{RGB}{205,213,224}
+\definecolor{lstkw}{RGB}{16,86,150}
+\definecolor{lstcm}{RGB}{108,118,132}
+\definecolor{lststr}{RGB}{166,60,54}
+\definecolor{lstnum}{RGB}{150,158,170}
+\lstdefinestyle{sqlstyle}{
+  language=SQL,
+  morekeywords={WITH,OVER,PARTITION,LAG,NTILE,DATEDIFF,DATEPART,CAST,ISNULL,RTRIM,
+                STRING_AGG,QUOTED_IDENTIFIER,ANSI_NULLS,NOCOUNT,PRINT,CONVERT,
+                decimal,varchar,int,YEAR,MONTH,ABS,EXISTS,DISTINCT},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{lstkw}\bfseries,
+  commentstyle=\color{lstcm}\itshape,
+  stringstyle=\color{lststr},
+  backgroundcolor=\color{lstbg},
+  frame=single, rulecolor=\color{lstframe}, framesep=5pt,
+  breaklines=true, breakatwhitespace=false, breakindent=14pt,
+  columns=fullflexible, keepspaces=true, showstringspaces=false,
+  numbers=left, numberstyle=\tiny\color{lstnum}, numbersep=8pt, stepnumber=1,
+  xleftmargin=17pt, xrightmargin=1pt, aboveskip=6pt, belowskip=5pt,
+  morecomment=[l]{--}
+}
+\lstset{style=sqlstyle}
+\lstdefinestyle{shellstyle}{
+  language=bash, basicstyle=\ttfamily\scriptsize, keywordstyle=\color{lstkw},
+  commentstyle=\color{lstcm}\itshape, backgroundcolor=\color{lstbg},
+  frame=single, rulecolor=\color{lstframe}, framesep=5pt,
+  breaklines=true, columns=fullflexible, keepspaces=true, showstringspaces=false,
+  numbers=none, xleftmargin=4pt, xrightmargin=1pt, aboveskip=6pt, belowskip=5pt
+}
+% Tieu de nho dat trên moi khoi ma nguon / bang ket qua trong phu luc.
+\newcommand{\qhead}[1]{\vspace{1pt}\noindent\textbf{\small #1}\par\vspace{-3pt}}
+
+% ---------- Nhịp chữ, đoạn văn và bảng biểu ----------
+% 12pt / baseline khoảng 16,7pt; bảng và chú thích dùng giãn dòng riêng.
+\setstretch{1.15}
+\setlength{\parskip}{2pt plus 1pt minus 1pt}
+\setlength{\parindent}{15pt}
+\setlength{\emergencystretch}{2em}
+\raggedbottom
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\tabularxcolumn}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+% Dung \setstretch (chi khai bao) thay cho \singlespacing: lenh \singlespacing
+% cua setspace phat sinh \vskip, ro ra ngoai hop float va tao mot dong trong
+% thua truoc doan van ke tiep moi khi float bi doi sang trang khac.
+\AtBeginEnvironment{table}{\setstretch{1}\small}
+\AtBeginEnvironment{figure}{\setstretch{1}}
+\captionsetup{font={small,stretch=1},labelfont=bf,skip=4pt}
+\captionsetup[table]{position=top}
+\setlist{itemsep=2pt,topsep=3pt,parsep=0pt,partopsep=0pt}
+% Moi truong center dung \trivlist nen an theo \topsep; mac dinh o 12pt la ~10pt.
+\AtBeginDocument{\setlength{\topsep}{3pt plus 1pt minus 1pt}%
+                 \setlength{\partopsep}{0pt}}
+\titlespacing*{\section}{0pt}{14pt plus 2pt minus 2pt}{5pt}
+\titlespacing*{\subsection}{0pt}{10pt plus 2pt minus 1pt}{3pt}
+\titlespacing*{\subsubsection}{0pt}{8pt}{3pt}
+\setlength{\textfloatsep}{9pt plus 2pt minus 2pt}
+\setlength{\intextsep}{7pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+
+% Keep floats together at the top of dedicated figure/table pages.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{16pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
 
 \definecolor{tblhead}{RGB}{220,230,245}
 \definecolor{cBar}{RGB}{70,130,180}
@@ -45,7 +168,7 @@
 
 
 % ---------- Header / Footer ----------
-\setlength{\headheight}{40pt}
+\setlength{\headheight}{32pt}
 \pagestyle{fancy}
 \fancyhead{}
 \fancyhead[L]{
@@ -60,7 +183,7 @@
  \end{tabular}
 }
 \fancyfoot{}
-\fancyfoot[L]{\footnotesize \textbf{Báo cáo Coursework môn Kho dữ liệu và Hệ hỗ trợ quyết định - CO5113}}
+\fancyfoot[L]{\fontsize{8}{10}\selectfont Báo cáo Coursework môn Kho dữ liệu và Hệ hỗ trợ quyết định - CO5113}
 \fancyfoot[R]{\footnotesize Trang \thepage /\pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.3pt}
 \renewcommand{\footrulewidth}{0.3pt}
@@ -68,64 +191,95 @@
 \begin{document}
 
 % ======================= TRANG BÌA =======================
+\hypersetup{pageanchor=false}
 \begin{titlepage}
-\begin{center}
-    {ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH}\\
-    {TRƯỜNG ĐẠI HỌC BÁCH KHOA}\\
-    \textbf{KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH}
-\end{center}
-
-\vspace{10pt}
-\begin{center}
-    \includegraphics[scale=0.7]{LOGO HCMUT.png}
-
-    \vspace{40pt}
-    \begin{tabular}{c}
-    \multicolumn{1}{l}{\textbf{{\large KHO DỮ LIỆU VÀ HỆ HỖ TRỢ QUYẾT ĐỊNH (CO5113)}}}\\
-    ~~\\
-    \hline
-    \\
-    \multicolumn{1}{l}{\textbf{{\large Báo cáo Coursework -- Chủ đề: Customer Churn}}}\\
-    \\
-    \textbf{\textit{{\Huge “Dataset Analysis”}}}\\
-    \\
-    {\large Hiểu khách hàng của CompanyX qua kho dữ liệu}\\
-    \\
-    \hline
-    \end{tabular}
-\end{center}
-
-\vspace{2cm}
-
-\begin{table}[h]
+\thispagestyle{empty}
+\singlespacing
+\setlength{\parskip}{0pt}
 \centering
-    \begin{tabular}{rl}
-    \textbf{GVHD}:      & \dots \\
-    & \\
-    \textbf{Nhóm}:      & \dots \\
-    & \\
-    \textbf{SV thực hiện}: & Lương Bảo Thiên - MSSV \\
-    \textbf{Phần phụ trách}: & Mục 3 -- Dataset Analysis
-    \end{tabular}
-\end{table}
-
-\vspace{50pt}
-\begin{center}
-    {TP. HỒ CHÍ MINH, THÁNG 09/2026}
-\end{center}
+{ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH\par}
+\vspace{5pt}
+{TRƯỜNG ĐẠI HỌC BÁCH KHOA\par}
+\vspace{5pt}
+{\textbf{KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH}\par}
+\vspace{18pt}
+\includegraphics[width=3.2cm]{LOGO HCMUT.png}\par
+\vfill
+{\large\bfseries KHO DỮ LIỆU VÀ HỆ HỖ TRỢ QUYẾT ĐỊNH (CO5113)\par}
+\vspace{14pt}
+\rule{\textwidth}{0.6pt}\par
+\vspace{16pt}
+{\large\bfseries Báo cáo Coursework -- Chủ đề: Customer Churn\par}
+\vspace{18pt}
+{\Huge\bfseries\itshape “Dataset Analysis”\par}
+\vspace{15pt}
+{\large Hiểu khách hàng của CompanyX qua kho dữ liệu\par}
+\vspace{16pt}
+\rule{\textwidth}{0.6pt}\par
+\vfill
+\begin{tabular}{@{}rl@{}}
+\textbf{GVHD}: & \dots \\[8pt]
+\textbf{Nhóm}: & \dots \\[8pt]
+\textbf{SV thực hiện}: & Lương Bảo Thiên - MSSV \\[5pt]
+\textbf{Phần phụ trách}: & Mục 3 -- Dataset Analysis
+\end{tabular}\par
+\vfill
+{TP. HỒ CHÍ MINH, THÁNG 09/2026\par}
 \end{titlepage}
 
-\tableofcontents
-\newpage
+\pagenumbering{roman}
+\hypersetup{pageanchor=true}
+\fancyfoot[R]{\footnotesize Trang \thepage}
+{\setstretch{1.05}\setlength{\parskip}{0pt}\tableofcontents}
+\clearpage
+\pagenumbering{arabic}
+\fancyfoot[R]{\footnotesize Trang \thepage /\pageref{LastPage}}
+
+
 
 
 % =====================================================================
 \section{Kho dữ liệu CompanyX có gì?}
 \label{sec:overview}
 \subsection{Nguồn gốc và quy mô}
-Nhóm được cung cấp một bản sao lưu cơ sở dữ liệu tên \texttt{CompanyX.bak}, dung lượng 214 MB. Khi khôi phục bản sao lưu này lên SQL Server, tên gốc bên trong hiện ra là \texttt{AdventureWorks2022}. CompanyX vì vậy chính là bộ dữ liệu mẫu AdventureWorks của Microsoft, mô phỏng công ty Adventure Works Cycles: một doanh nghiệp sản xuất và bán xe đạp, linh kiện, quần áo và phụ kiện đạp xe. Công ty bán hàng theo hai kênh, trực tuyến cho khách cá nhân và bán sỉ qua các cửa hàng đại lý do nhân viên kinh doanh phụ trách, trên ba khu vực Bắc Mỹ, Châu Âu và Châu Úc. Bảng~\ref{tab:overview} tóm tắt quy mô kho dữ liệu.
+Nhóm được cung cấp một bản sao lưu cơ sở dữ liệu tên \texttt{CompanyX.bak}, dung lượng 214 MB. Tên ``CompanyX'' chỉ là tên được đặt lại: đổi tên một cơ sở dữ liệu không đổi tên logic của các tệp dữ liệu bên trong nó, và hai tệp đó vẫn mang tên gốc.
+\begin{console}{sqlcmd --- tên logic của tệp dữ liệu bên trong CompanyX}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t14_origin.sql
+ten_logic_tep            loai  mb
+------------------------ ----- -----------
+AdventureWorks2022       ROWS          264
+AdventureWorks2022_log   LOG           136
 
-\begin{table}[H]
+(2 rows affected)
+\end{console}
+
+CompanyX vì vậy chính là bộ dữ liệu mẫu AdventureWorks của Microsoft, mô phỏng công ty Adventure Works Cycles: một doanh nghiệp sản xuất và bán xe đạp, linh kiện, quần áo và phụ kiện đạp xe. Công ty bán hàng theo hai kênh, trực tuyến cho khách cá nhân và bán sỉ qua các cửa hàng đại lý do nhân viên kinh doanh phụ trách, trên ba khu vực Bắc Mỹ, Châu Âu và Châu Úc. Bảng~\ref{tab:provenance} ghi lại xuất xứ của tệp sao lưu, đọc từ phần đầu tệp bằng lệnh \texttt{RESTORE HEADERONLY} (truy vấn V21); Bảng~\ref{tab:overview} tóm tắt quy mô kho dữ liệu.
+
+\begin{table}[!htbp]
+\centering
+\caption{Xuất xứ tệp \texttt{CompanyX.bak} (truy vấn V21)}
+\label{tab:provenance}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.5cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Thuộc tính} & \textbf{Giá trị} \\
+\midrule
+Tên bản sao lưu & CompanyX-Full Database Backup \\
+Tên cơ sở dữ liệu & CompanyX \\
+Tên logic của tệp dữ liệu & \texttt{AdventureWorks2022}, \texttt{AdventureWorks2022\_log} \\
+Ngày tạo cơ sở dữ liệu & 05/11/2023 \\
+Ngày thực hiện sao lưu & 07/11/2023 \\
+Máy tạo bản sao lưu & TRUNG-LEGION \\
+Phiên bản SQL Server & 16 (SQL Server 2022), mức tương thích 160 \\
+Collation & \texttt{SQL\_Latin1\_General\_CP1\_CI\_AS} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Hai đặc điểm kỹ thuật cần ghi nhận ngay vì chúng quyết định cách thiết kế các bước sau. Thứ nhất, \emph{hạt dữ liệu về thời gian là ngày}: toàn bộ 31.465 đơn đều có phần giờ--phút bằng 0, trải trên 1.124 ngày khác nhau trong 1.127 ngày của kỳ dữ liệu. Không có thông tin trong ngày, nên mọi phân tích thời gian chỉ xuống được tới mức ngày. Thứ hai, \emph{mọi cột tiền đều ghi bằng USD}: 13.976 trong 31.465 đơn (44\%) có gắn mã tỷ giá (AUD 6.675 đơn, CAD 3.839, GBP 3.155, EUR 172, và một ít DEM, FRF), nhưng đối chiếu cho thấy \texttt{UnitPrice} của các đơn đó bằng đúng giá niêm yết USD chứ không phải giá đã quy đổi. Cột tỷ giá vì vậy chỉ ghi nhận khách nhìn thấy giá bằng đồng tiền nào, không phải đơn vị lưu trữ; các phép cộng doanh thu trong báo cáo không cần quy đổi tiền tệ.
+
+\begin{table}[!htbp]
 \centering
 \caption{Quy mô kho dữ liệu CompanyX}
 \label{tab:overview}
@@ -139,16 +293,18 @@ Khoảng thời gian có giao dịch & 31/05/2011 -- 30/06/2014 (37 tháng) \\
 Số khách hàng có mua hàng & 19.119 \\
 Số đơn hàng & 31.465 đơn, gồm 121.317 dòng sản phẩm \\
 Tổng doanh thu & 123,16 triệu USD \\
-Số sản phẩm & 504 sản phẩm, thuộc 4 danh mục lớn và 37 danh mục con \\
+Số sản phẩm & 504 sản phẩm, trong đó 295 được xếp vào 37 danh mục con thuộc 4 danh mục lớn; 266 sản phẩm thực sự xuất hiện trong đơn hàng và tất cả đều đã được phân loại \\
 Số lãnh thổ bán hàng & 10 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \subsection{Sáu nhóm bảng theo bộ phận nghiệp vụ}
-72 bảng được xếp thành 6 nhóm, mỗi nhóm ứng với một bộ phận trong công ty (Bảng~\ref{tab:schemas}). Với chủ đề khách hàng rời bỏ, hai nhóm Bán hàng (Sales) và Cá nhân (Person) chứa gần như toàn bộ thông tin cần thiết: khách là ai và đã mua gì. Nhóm Sản xuất (Production) cho biết tên và loại sản phẩm. Ba nhóm còn lại ghi nhận việc mua nguyên liệu từ nhà cung cấp, nhân sự và các bảng hệ thống, hầu như không liên quan đến chủ đề.
+72 bảng được xếp thành 6 nhóm, mỗi nhóm ứng với một bộ phận trong công ty (Bảng~\ref{tab:schemas}). Với chủ đề khách hàng rời bỏ, hai nhóm Bán hàng (Sales) và Cá nhân (Person) chứa gần như toàn bộ thông tin cần thiết: khách là ai và đã mua gì. Nhóm Sản xuất (Production) cho biết tên và loại sản phẩm. Ba nhóm còn lại ghi nhận việc mua nguyên liệu từ nhà cung cấp, nhân sự và các bảng hệ thống.
 
-\begin{table}[H]
+Cột ``Liên quan'' ở Bảng~\ref{tab:schemas} không phải nhận xét cảm tính. Nhóm dùng một tiêu chí cố định: một nhóm bảng được xếp mức \emph{Cao} nếu nó chứa trực tiếp danh tính khách hàng hoặc hành vi mua của khách; mức \emph{Trung bình} nếu nó chỉ được dùng để diễn giải hành vi đó (ví dụ tra tên và loại sản phẩm từ mã sản phẩm trong đơn); mức \emph{Thấp} nếu không có đường nối khóa ngoại nào dẫn tới đơn hàng hay khách hàng. Theo tiêu chí này, Sales và Person ở mức Cao vì chứa bảng \texttt{Customer}, \texttt{SalesOrderHeader}, \texttt{SalesOrderDetail} và \texttt{Person}; Production ở mức Trung bình vì chỉ ba bảng trong 25 bảng của nó (\texttt{Product}, \texttt{ProductSubcategory}, \texttt{ProductCategory}) được dùng, 22 bảng còn lại phục vụ sản xuất và tồn kho; Purchasing và HumanResources ở mức Thấp vì mô tả quan hệ với nhà cung cấp và nhân sự nội bộ, không nối tới khách hàng.
+
+\begin{table}[!htbp]
 \centering
 \caption{Các nhóm bảng trong CompanyX và mức độ liên quan đến chủ đề}
 \label{tab:schemas}
@@ -167,10 +323,11 @@ dbo (Hệ thống) & 4 & Nhật ký hệ thống, phiên bản; kèm 4 view bổ
 \end{tabularx}
 \end{table}
 
+\FloatBarrier
 \subsection{Các bảng quan trọng và ý nghĩa của chúng}
 Bảng~\ref{tab:tables} liệt kê những bảng được dùng trong phân tích, số dòng thực tế và thông tin mà mỗi bảng mang lại.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Các bảng chính phục vụ phân tích khách hàng}
 \label{tab:tables}
@@ -193,19 +350,35 @@ Person.Address, CountryRegion & 19.614 / 238 & Địa chỉ và quốc gia của
 \end{tabularx}
 \end{table}
 
-Kết quả khảo sát khách cá nhân (tuổi, thu nhập, nghề nghiệp\dots) không được lưu thành các cột riêng mà gói chung trong một trường XML của bảng \texttt{Person.Person}. CompanyX cung cấp sẵn view \texttt{Sales.vPersonDemographics} để tách trường này thành 12 thuộc tính: ngày sinh, giới tính, tình trạng hôn nhân, thu nhập năm, học vấn, nghề nghiệp, tổng số con, số con còn ở nhà, sở hữu nhà, số xe hơi, ngày mua đầu tiên và tổng mua trong năm. Khảo sát cửa hàng được lưu và tách tương tự trong view \texttt{Sales.vStoreWithDemographics}. Cần phân biệt: view là một truy vấn được đặt tên, đọc dữ liệu từ bảng gốc mỗi khi được gọi, không phải bảng lưu sẵn kết quả; vì vậy số liệu lấy qua view luôn khớp với bảng gốc, nhưng chi phí truy vấn nằm ở bước tách XML.
+Kết quả khảo sát khách cá nhân (tuổi, thu nhập, nghề nghiệp\dots) không được lưu thành các cột riêng mà gói chung trong một trường XML của bảng \texttt{Person.Person}. CompanyX cung cấp sẵn view \texttt{Sales.\allowbreak vPersonDemographics} để tách trường này thành 12 thuộc tính: ngày sinh, giới tính, tình trạng hôn nhân, thu nhập năm, học vấn, nghề nghiệp, tổng số con, số con còn ở nhà, sở hữu nhà, số xe hơi, ngày mua đầu tiên và tổng mua trong năm. Khảo sát cửa hàng được lưu và tách tương tự trong view \texttt{Sales.vStoreWithDemographics}. Cần phân biệt: view là một truy vấn được đặt tên, đọc dữ liệu từ bảng gốc mỗi khi được gọi, không phải bảng lưu sẵn kết quả; vì vậy số liệu lấy qua view luôn khớp với bảng gốc, nhưng chi phí truy vấn nằm ở bước tách XML.
 
-So với bộ AdventureWorks gốc, CompanyX có thêm bốn view trong nhóm \texttt{dbo}: \texttt{PersonCustomerView} (khách cá nhân kèm họ tên), \texttt{StoreCustomerView} (khách đại lý kèm tên cửa hàng), \texttt{SalesPersonView} (hồ sơ nhân viên kinh doanh với chỉ tiêu, thưởng, hoa hồng, doanh số) và \texttt{SalesOrderDetailView} (chi tiết đơn hàng kèm lý do mua, chỉ lấy những dòng có áp dụng khuyến mãi). Hai view đầu tách sẵn hai nhóm khách hàng, view cuối tập trung vào các dòng hàng có khuyến mãi.
+So với bộ AdventureWorks gốc, CompanyX có thêm bốn view trong nhóm \texttt{dbo}. Điều này kiểm chứng được bằng ngày tạo đối tượng: 20 view chuẩn của AdventureWorks đều sinh ra cùng một thời điểm khi cơ sở dữ liệu được dựng, còn bốn view kia được tạo sáu tháng sau đó, cách nhau vài phút trong cùng một buổi làm việc.
+\begin{console}{sqlcmd --- ngày tạo của các view, nhóm dbo so với phần còn lại}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t15_views.sql
+view_name                          ngay_tao
+---------------------------------- ----------------
+--- 20 view chuan con lai ---      2023-05-08 12:07
+dbo.SalesPersonView                2023-11-05 21:41
+dbo.PersonCustomerView             2023-11-05 21:48
+dbo.StoreCustomerView              2023-11-05 21:51
+dbo.SalesOrderDetailView           2023-11-05 23:47
 
+(5 rows affected)
+\end{console}
+
+Bốn view đó là: \texttt{Person\allowbreak CustomerView} (khách cá nhân kèm họ tên), \texttt{StoreC\allowbreak ustomerView} (khách đại lý kèm tên cửa hàng), \texttt{SalesP\allowbreak ersonView} (hồ sơ nhân viên kinh doanh với chỉ tiêu, thưởng, hoa hồng, doanh số) và \texttt{SalesO\allowbreak rderDetailView} (chi tiết đơn hàng kèm lý do mua, chỉ lấy những dòng có áp dụng khuyến mãi). Hai view đầu tách sẵn hai nhóm khách hàng, view cuối tập trung vào các dòng hàng có khuyến mãi.
+
+\FloatBarrier
 \subsection{Những bảng nào thực sự cần cho chủ đề?}
 Khi khảo sát sơ bộ, nhóm nhận thấy hai cụm bảng liên quan trực tiếp đến chủ đề: cụm Bán hàng gồm \texttt{Customer}, \texttt{SalesOrderHeader}, \texttt{SalesOrderDetail}, \texttt{SalesTerritory}, \texttt{Store}, và cụm Cá nhân gồm \texttt{Person}. Để chắc chắn, nhóm kiểm tra lại các mối liên kết được khai báo trong cơ sở dữ liệu (Bảng~\ref{tab:fk}). Kết quả xác nhận nhận định ban đầu: các bảng này nối với nhau thành một chuỗi liền mạch, đi từ khách hàng là ai đến họ đã mua gì.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Các mối liên kết giữa những bảng trung tâm}
 \label{tab:fk}
-\footnotesize
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.8cm} >{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{4.1cm} X}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.0cm} >{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{4.15cm} X}
 \toprule
 \rowcolor{tblhead} \textbf{Từ bảng} & \textbf{Qua cột} & \textbf{Đến bảng} & \textbf{Ý nghĩa} \\
 \midrule
@@ -223,11 +396,11 @@ Sales.Store & SalesPersonID & Sales.SalesPerson & Đại lý do ai phụ trách 
 \end{tabularx}
 \end{table}
 
-Về bản số (cardinality): một khách có nhiều đơn, một đơn có nhiều dòng hàng (quan hệ một--nhiều). Riêng lý do mua là quan hệ nhiều--nhiều: bảng cầu \texttt{SalesOrderHeaderSalesReason} có khóa chính ghép (\texttt{SalesOrderID}, \texttt{SalesReasonID}), nên một đơn có thể gắn nhiều lý do và mỗi lý do gắn với nhiều đơn. Khi nối bảng đơn hàng với bảng này, số dòng sẽ tăng theo số lý do của đơn; các thống kê về lý do mua ở Mục~\ref{sec:how} vì vậy đếm riêng số lý do, số đơn và số khách.
+Về bản số (cardinality): một khách có nhiều đơn, một đơn có nhiều dòng hàng (quan hệ một--nhiều). Riêng lý do mua là quan hệ nhiều--nhiều: bảng cầu \texttt{SalesOrderHeader\allowbreak SalesReason} có khóa chính ghép (\texttt{SalesOrderID}, \texttt{SalesReasonID}), nên một đơn có thể gắn nhiều lý do và mỗi lý do gắn với nhiều đơn. Khi nối bảng đơn hàng với bảng này, số dòng sẽ tăng theo số lý do của đơn; các thống kê về lý do mua ở Mục~\ref{sec:how} vì vậy đếm riêng số lý do, số đơn và số khách.
 
 Để trả lời trọn vẹn các câu hỏi về khách hàng, cần thêm ba nguồn ngoài danh sách trên: bảng lý do mua để biết vì sao khách mua; chuỗi \texttt{Product} $\to$ \texttt{ProductSubcategory} $\to$ \texttt{ProductCategory} để biết khách mua nhóm sản phẩm gì; và hai view nhân khẩu học đã nêu. Tất cả gộp lại khoảng 10 bảng, được vẽ lại theo ngôn ngữ nghiệp vụ trong Hình~\ref{fig:erd}. Bảng Khách hàng nằm ở giữa; mỗi khách có nhiều Đơn hàng; mỗi đơn gồm nhiều Dòng sản phẩm. Khách cá nhân được mô tả thêm bằng Hồ sơ cá nhân, khách đại lý bằng Hồ sơ cửa hàng, và mỗi đơn hàng gắn với một Lý do mua.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}[
   ent/.style={draw, rounded corners=3pt, fill=blue!6, font=\small\sffamily, align=center, inner sep=6pt, minimum width=3cm, minimum height=1.1cm},
@@ -255,39 +428,142 @@ Về bản số (cardinality): một khách có nhiều đơn, một đơn có n
 \end{figure}
 
 \subsection{Dữ liệu này đáng tin đến đâu?}
-Toàn bộ 90 mối liên kết giữa các bảng còn nguyên vẹn, không có mã khách hay mã đơn bị trùng. 100\% khách cá nhân có đầy đủ hồ sơ khảo sát; 100\% cửa hàng có hồ sơ và có nhân viên phụ trách. Những vấn đề tìm thấy (Bảng~\ref{tab:quality}) đều nhỏ và có cách xử lý rõ ràng, nên kho dữ liệu này đủ sạch để phân tích mà không cần công đoạn làm sạch nặng.
+Câu trả lời có hai vế. Về mặt \emph{liên kết}, kho dữ liệu nguyên vẹn: toàn bộ 90 khóa ngoại còn hiệu lực và đều ở trạng thái đáng tin, không có mã khách hay mã đơn bị trùng, mọi đơn hàng đều có dòng sản phẩm và ngược lại, 100\% khách cá nhân có hồ sơ khảo sát, 100\% cửa hàng có hồ sơ và có nhân viên phụ trách. Các phép cộng cũng khớp: không đơn nào có \texttt{TotalDue} lệch khỏi tổng ba thành phần, và không dòng nào có \texttt{LineTotal} lệch khỏi tích đơn giá, số lượng và mức giảm giá.
 
-\begin{table}[H]
+Nhưng về mặt \emph{giá trị}, kho dữ liệu có một vùng hỏng rõ rệt, và nó không lộ ra qua các phép kiểm tra thông thường. Dấu hiệu đầu tiên nằm ở chính khai báo của cơ sở dữ liệu: trong 89 ràng buộc kiểm tra (\texttt{CHECK}), có 8 ràng buộc đang bị \emph{tắt} (Bảng~\ref{tab:checks}). Ràng buộc bị tắt nghĩa là SQL Server không còn chặn dữ liệu sai, và cũng không bảo đảm dữ liệu sẵn có thỏa mãn điều kiện. Kiểm tra lại thì đúng như vậy: mỗi ràng buộc bị tắt đều có dữ liệu vi phạm tương ứng.
+
+Thêm vào đó, hai cột \texttt{SalesOrderDetail.\allowbreak OrderQty} và \texttt{SalesOrderDetail.\allowbreak UnitPrice} hiện cho phép giá trị rỗng, trong khi ở AdventureWorks gốc chúng không được rỗng. Nghĩa là cấu trúc bảng đã bị sửa để chứa được dữ liệu mà thiết kế ban đầu không cho phép.
+
+Vùng hỏng tập trung vào sáu đơn hàng liên tiếp, từ 43677 đến 43682, tổng cộng 75 dòng sản phẩm. Điều đáng chú ý là mỗi đơn mang đúng \emph{một} kiểu lỗi khác nhau (Bảng~\ref{tab:broken}): đơn giá bằng 0, đơn giá âm, đơn giá rỗng, số lượng rỗng, số lượng bằng 0, số lượng âm --- kèm hai đơn có ngày giao và ngày hẹn nằm trước ngày đặt gần một năm. Sự đều đặn này gợi ý đây là dữ liệu hỏng được đưa vào có chủ ý chứ không phải sai sót ngẫu nhiên khi nhập liệu. Suy đoán đó kiểm chứng được, vì SQL Server có lưu dấu vết thời gian của từng đối tượng.
+
+\begin{console}{sqlcmd --- dấu vết can thiệp vào cấu trúc bảng}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t16_modified.sql
+ngay_tao_bang so_bang
+------------- -----------
+2023-05-08             69
+2023-08-15              1
+2023-08-16              2
+
+(3 rows affected)
+bang                 tao_luc          sua_luc          check_bi_tat
+-------------------- ---------------- ---------------- ------------
+sysdiagrams          2023-08-15 23:24 2023-08-15 23:24            0
+SalesOrderHeader     2023-05-08 12:07 2023-08-16 10:26            3
+SpecialOfferProduct  2023-05-08 12:07 2023-08-16 10:26            0
+TransactionHistory   2023-08-16 10:26 2023-08-16 10:26            0
+Product              2023-05-08 12:07 2023-08-16 10:26            0
+SalesOrderDetail     2023-08-16 10:26 2023-08-16 10:28            2
+SpecialOffer         2023-05-08 12:07 2023-08-16 10:38            3
+
+(7 rows affected)
+\end{console}
+
+Kết quả cho một dòng thời gian khép kín. Ngày 08/05/2023, 69 trong 72 bảng được sinh ra cùng một lúc --- đó là lần dựng cơ sở dữ liệu AdventureWorks gốc. Ba tháng sau, trong một khoảng \emph{mười hai phút} ngày 16/08/2023, sáu bảng bị đụng tới: \texttt{SalesOrderDetail} và \texttt{TransactionHistory} bị xóa rồi tạo lại (ngày tạo của chúng là 16/08/2023 chứ không phải 08/05/2023), còn \texttt{SalesOrderHeader}, \texttt{SpecialOffer}, \texttt{Product} và \texttt{SpecialOfferProduct} bị sửa cấu trúc. Đúng ba bảng trong số đó --- \texttt{SalesOrderHeader}, \texttt{SalesOrderDetail}, \texttt{SpecialOffer} --- là ba bảng đang mang toàn bộ 8 ràng buộc bị tắt, theo tỷ lệ 3--2--3. Không bảng nào khác trong 72 bảng có ràng buộc bị tắt.
+
+Việc \texttt{SalesOrderDetail} bị \emph{tạo lại} thay vì chỉ sửa cũng giải thích luôn vì sao hai cột \texttt{OrderQty} và \texttt{UnitPrice} hiện cho phép rỗng: bảng được dựng lại với định nghĩa cột khác bản gốc. Ba tháng sau nữa, ngày 05/11/2023, cơ sở dữ liệu được đặt tên CompanyX và bốn view \texttt{dbo} được thêm vào; hai ngày sau thì bản sao lưu được tạo (Bảng~\ref{tab:provenance}).
+
+Nói cách khác, ba nhóm bằng chứng độc lập đều chỉ về cùng một kết luận: mẫu hình lỗi quá đều để là ngẫu nhiên; tập ràng buộc bị tắt khớp chính xác với tập lỗi có trong dữ liệu; và dấu vết thời gian cho thấy đúng những bảng đó bị can thiệp trong một buổi làm việc ngắn. Đây là dữ liệu hỏng được cài vào có chủ đích. Nhận định này quan trọng về mặt phương pháp: nó có nghĩa vùng hỏng là hữu hạn và xác định được, không phải triệu chứng của một quy trình thu thập dữ liệu kém chất lượng lan khắp kho.
+
+Đây cũng là lý do các phép kiểm tra cộng trừ ở trên không phát hiện được gì: với đơn 43677, tất cả đơn giá bằng 0 nên tổng dòng hàng bằng 0 và bằng đúng \texttt{SubTotal}; phép cộng khớp hoàn hảo trong khi bản ghi hoàn toàn vô nghĩa, vì đơn vẫn mang 747,10 USD tiền thuế và 233,47 USD phí vận chuyển cho 24 sản phẩm giá 0 đồng. \emph{Nhất quán về số học không đồng nghĩa với dùng được.}
+
+Ngoài đơn hàng, bảng chương trình khuyến mãi cũng có ba dòng hỏng (Bảng~\ref{tab:offers}): chương trình 3 có số lượng tối đa $-24$ (lẽ ra là 24, đúng như tên gọi ``Volume Discount 15 to 24''), còn chương trình 15 và 16 có ngày kết thúc nằm trước ngày bắt đầu. Hệ quả lan sang dữ liệu bán hàng: 169 dòng hàng của mẫu xe Mountain-500 Silver, trị giá 25.899 USD ở kênh đại lý, được áp mức giảm 40\% của chương trình 16 tại thời điểm chương trình đó, theo đúng ngày ghi trong bảng, chưa hề bắt đầu.
+
+Bảng~\ref{tab:quality} tổng hợp toàn bộ vấn đề tìm thấy cùng cách xử lý.
+
+\begin{table}[!htbp]
 \centering
-\caption{Các vấn đề về chất lượng dữ liệu và cách xử lý}
-\label{tab:quality}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.4cm} X >{\raggedright\arraybackslash}p{3.8cm}}
+\caption{Tám ràng buộc kiểm tra đang bị tắt trong cơ sở dữ liệu (truy vấn V17)}
+\label{tab:checks}
+\footnotesize
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.9cm} >{\raggedright\arraybackslash}p{5.5cm} X}
 \toprule
-\rowcolor{tblhead} \textbf{Vấn đề} & \textbf{Chi tiết} & \textbf{Cách xử lý} \\
+\rowcolor{tblhead} \textbf{Bảng} & \textbf{Ràng buộc} & \textbf{Điều kiện lẽ ra phải giữ} \\
 \midrule
-701 dòng \texttt{Customer} không có đơn & \texttt{PersonID} rỗng, \texttt{StoreID} có giá trị; không có đơn hàng nào & Bỏ ra khỏi tập phân tích; 19.119 khách còn lại đều có đơn \\
-2 đơn có tổng tiền âm & Đơn 43678 (19 dòng hàng) và 43682 (5 dòng), ngày 31/05/2011, kênh đại lý, trạng thái 5. Toàn bộ dòng hàng của hai đơn đều có \texttt{LineTotal} âm; dữ liệu không ghi lý do (có thể là trả hàng hoặc bút toán điều chỉnh) & Giữ trong số liệu mô tả; loại khỏi tập phân tích churn vì không thể xác nhận đây là lần mua \\
-315 đơn trạng thái 6 & Cột \texttt{Status} chỉ có hai giá trị: 5 (31.150 đơn) và 6 (315 đơn, tổng 1,18 triệu USD). Theo tài liệu AdventureWorks, 5 = đã giao, 6 = đã hủy & Giữ trong số liệu mô tả; không tính là lần mua trong tập phân tích churn \\
-76\% đơn dồn vào 12 tháng cuối & Kênh online tăng vọt từ quý 3/2013 & Chọn mốc gắn nhãn sao cho khách có đủ thời gian quan sát (Mục~\ref{sec:label}) \\
-Một số trường chữ chưa chuẩn & ``Bachelors '' thừa khoảng trắng; thu nhập ghi theo khoảng chứ không phải số & Chuẩn hóa trước khi dùng làm biến phân tích \\
+SalesOrderDetail & CK\_SalesOrderDetail\_\allowbreak OrderQty & Số lượng phải lớn hơn 0 \\
+SalesOrderDetail & CK\_SalesOrderDetail\_\allowbreak UnitPrice & Đơn giá không được âm \\
+SalesOrderHeader & CK\_SalesOrderHeader\_\allowbreak DueDate & Ngày hẹn không sớm hơn ngày đặt \\
+SalesOrderHeader & CK\_SalesOrderHeader\_\allowbreak ShipDate & Ngày giao không sớm hơn ngày đặt \\
+SalesOrderHeader & CK\_SalesOrderHeader\_\allowbreak SubTotal & Tiền trước thuế không được âm \\
+SpecialOffer & CK\_SpecialOffer\_\allowbreak DiscountPct & Mức giảm giá không được âm \\
+SpecialOffer & CK\_SpecialOffer\_EndDate & Ngày kết thúc không sớm hơn ngày bắt đầu \\
+SpecialOffer & CK\_SpecialOffer\_MaxQty & Số lượng tối đa không được âm \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Báo cáo dùng hai tập dữ liệu và ghi rõ ở từng chỗ. \emph{Tập mô tả} là toàn bộ dữ liệu gốc, dùng cho các thống kê ở Mục~\ref{sec:who} đến Mục~\ref{sec:how} để giữ đúng con số của kho dữ liệu. \emph{Tập phân tích churn} loại hai đơn âm và 315 đơn hủy; Bảng~\ref{tab:before-after} cho thấy việc loại này làm mất 124 khách (những khách chỉ có đơn hủy) và khoảng 1\% đơn, dòng hàng và doanh thu. Để tiện đối chiếu với các con số đã công bố trong nhóm, các bảng ở Mục~\ref{sec:churn} vẫn trình bày kết quả trên tập gốc và ghi kèm kết quả trên tập đã lọc ở những chỗ có khác biệt; chênh lệch ở tỷ lệ rời bỏ tổng thể là 16,9\% so với 17,6\%.
-
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
-\caption{Quy mô dữ liệu trước và sau khi loại đơn hủy và đơn âm (truy vấn V02e)}
-\label{tab:before-after}
+\caption{Sáu đơn hàng hỏng, mỗi đơn một kiểu lỗi (truy vấn V18)}
+\label{tab:broken}
+\small
+\begin{tabularx}{\textwidth}{r r >{\raggedright\arraybackslash}p{3.5cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Đơn} & \textbf{Dòng hỏng} & \textbf{Kiểu lỗi} & \textbf{Ghi chú} \\
+\midrule
+43677 & 12 & Đơn giá bằng 0 & Vẫn thu 980,57 USD thuế và phí cho 24 sản phẩm giá 0 \\
+43678 & 19 & Đơn giá âm & Tổng đơn $-8.563,45$ USD \\
+43679 & 3 & Đơn giá rỗng & Cột lẽ ra không được rỗng \\
+43680 & 15 & Số lượng rỗng & Ngày giao và ngày hẹn trước ngày đặt gần một năm \\
+43681 & 21 & Số lượng bằng 0 & Ngày giao và ngày hẹn trước ngày đặt gần một năm \\
+43682 & 5 & Số lượng âm & Tổng đơn $-3.387,74$ USD \\
+\midrule
+\textit{Tổng} & \textit{75} & & \textit{Cả sáu đều là khách đại lý, kênh bán sỉ} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{Ba dòng hỏng trong bảng chương trình khuyến mãi (truy vấn V19)}
+\label{tab:offers}
+\small
+\begin{tabularx}{\textwidth}{r >{\raggedright\arraybackslash}p{4.3cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Mã} & \textbf{Tên chương trình} & \textbf{Lỗi} \\
+\midrule
+3 & Volume Discount 15 to 24 & Số lượng tối đa ghi $-24$, lẽ ra là 24 \\
+15 & Half-Price Pedal Sale & Kết thúc 14/08/2012, bắt đầu 14/07/2013 \\
+16 & Mountain-500 Silver Clearance & Kết thúc 30/05/2013, bắt đầu 31/03/2014; kéo theo 169 dòng hàng trị giá 25.899 USD được giảm 40\% ngoài thời hạn \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{Các vấn đề về chất lượng dữ liệu và cách xử lý}
+\label{tab:quality}
 \footnotesize
-\begin{tabularx}{\textwidth}{Xrrrrr}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.5cm} X >{\raggedright\arraybackslash}p{3.6cm}}
+\toprule
+\rowcolor{tblhead} \textbf{Vấn đề} & \textbf{Chi tiết} & \textbf{Cách xử lý} \\
+\midrule
+701 dòng \texttt{Customer} không có đơn & \texttt{PersonID} rỗng, \texttt{StoreID} có giá trị; không có đơn hàng nào & Bỏ ra khỏi tập phân tích; 19.119 khách còn lại đều có đơn \\
+8 ràng buộc \texttt{CHECK} bị tắt & Xem Bảng~\ref{tab:checks}. Ràng buộc bị tắt nên máy chủ không còn chặn dữ liệu sai & Không bật lại (chỉ đọc); dùng làm chỉ dẫn để đi tìm dữ liệu vi phạm \\
+2 cột bị nới thành cho phép rỗng & \texttt{OrderQty} và \texttt{UnitPrice} của \texttt{SalesOrderDetail}; ở AdventureWorks gốc hai cột này không được rỗng & Xử lý giá trị rỗng như dữ liệu hỏng, không quy về 0 \\
+6 đơn hỏng, 75 dòng sản phẩm & Đơn 43677--43682, mỗi đơn một kiểu lỗi (Bảng~\ref{tab:broken}). Cả sáu đều thuộc khách đại lý & Giữ trong số liệu mô tả để nêu đúng hiện trạng; loại khỏi tập phân tích churn \\
+3 dòng hỏng ở bảng khuyến mãi & Bảng~\ref{tab:offers}; kéo theo 169 dòng hàng được giảm giá ngoài thời hạn & Không dùng \texttt{StartDate}, \texttt{EndDate}, \texttt{MaxQty} của bảng khuyến mãi làm biến phân tích \\
+315 đơn trạng thái 6 & Cột \texttt{Status} chỉ có hai giá trị: 5 (31.150 đơn) và 6 (315 đơn, tổng 1,18 triệu USD). Theo tài liệu AdventureWorks, 5 = đã giao, 6 = đã hủy & Giữ trong số liệu mô tả; không tính là lần mua trong tập phân tích churn \\
+73,7\% đơn dồn vào 12 tháng cuối & 23.202 trong 31.465 đơn có ngày đặt sau 30/06/2013; kênh online tăng vọt từ quý 3/2013 & Chọn mốc gắn nhãn sao cho khách có đủ thời gian quan sát (Mục~\ref{sec:label}) \\
+Một số trường chữ chưa chuẩn & ``Bachelors '' thừa khoảng trắng; thu nhập ghi theo khoảng chứ không phải số & Chuẩn hóa trước khi dùng làm biến phân tích \\
+Ba trường không dùng được & \texttt{Status} chỉ có hai trong sáu giá trị tài liệu mô tả; \texttt{ShipDate} luôn bằng ngày đặt cộng 7 ngày ở 31.454 trên 31.465 đơn; 30.334 đơn dùng thẻ đã hết hạn trước ngày đặt & Không dùng làm biến phân tích \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Báo cáo dùng hai tập dữ liệu và ghi rõ ở từng chỗ. \emph{Tập mô tả} là toàn bộ dữ liệu gốc, dùng cho các thống kê ở Mục~\ref{sec:who} đến Mục~\ref{sec:how} để giữ đúng con số của kho dữ liệu. \emph{Tập phân tích churn} loại 321 đơn: 315 đơn hủy và sáu đơn hỏng ở Bảng~\ref{tab:broken}. Bảng~\ref{tab:before-after} cho thấy việc loại này làm mất 124 khách (những khách chỉ có đơn hủy) và khoảng 1\% đơn, dòng hàng và doanh thu. Sáu đơn hỏng không làm mất thêm khách nào, vì cả sáu đều thuộc các đại lý còn nhiều đơn hợp lệ khác; nhờ vậy nhãn rời bỏ không đổi so với khi chỉ loại đơn hủy và đơn âm. Để tiện đối chiếu với các con số đã công bố trong nhóm, các bảng ở Mục~\ref{sec:churn} vẫn trình bày kết quả trên tập gốc và ghi kèm kết quả trên tập đã lọc ở những chỗ có khác biệt; chênh lệch ở tỷ lệ rời bỏ tổng thể là 16,9\% so với 17,6\%.
+
+\begin{table}[!htbp]
+\centering
+\caption{Quy mô dữ liệu trước và sau khi loại đơn hủy và đơn hỏng (truy vấn V02e)}
+\label{tab:before-after}
+\small
+\begin{tabularx}{\textwidth}{@{}Xrrrrr@{}}
 \toprule
 \rowcolor{tblhead} \textbf{Tập dữ liệu} & \textbf{Khách} & \textbf{Đơn} & \textbf{Dòng hàng} & \makecell[r]{\textbf{Trước thuế}\\\textbf{(USD)}} & \makecell[r]{\textbf{Tổng phải trả}\\\textbf{(USD)}} \\
 \midrule
 Gốc (tập mô tả) & 19.119 & 31.465 & 121.317 & 109.784.736 & 123.155.141 \\
-Đã lọc (tập phân tích churn) & 18.995 & 31.148 & 120.123 & 108.748.472 & 121.990.642 \\
+Đã lọc (tập phân tích churn) & 18.995 & 31.144 & 120.072 & 108.748.472 & 121.986.324 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -296,9 +572,9 @@ Gốc (tập mô tả) & 19.119 & 31.465 & 121.317 & 109.784.736 & 123.155.141 \
 \section{Chủ đề khách hàng rời bỏ trên kho dữ liệu này}
 Khách hàng rời bỏ (customer churn) là khách đã ngừng mua hàng của doanh nghiệp. Trong kho dữ liệu không có cột nào ghi ``khách này đã rời bỏ'': CompanyX là doanh nghiệp bán lẻ, khách không ký hợp đồng và không thông báo khi ngừng mua. Muốn biết ai đang rời bỏ và tại sao, trước hết phải hiểu khách hàng là ai, họ thích mua gì, mua như thế nào, và người ở lại khác gì người ra đi. Phần Dataset Analysis là bước làm quen đó, dựa trên các bảng đã xác định ở Mục~\ref{sec:overview}.
 
-Các mục tiếp theo lần lượt trả lời bốn câu hỏi: khách hàng của chúng ta là ai (Mục~\ref{sec:who}); họ thích mua gì (Mục~\ref{sec:what}); họ mua như thế nào, qua kênh nào, bao lâu một lần, vào lúc nào và vì lý do gì (Mục~\ref{sec:how}); và ai đang rời bỏ, kèm những dấu hiệu nào (Mục~\ref{sec:churn}). Mỗi nhận định đều đi kèm con số lấy từ kho dữ liệu và, ở những chỗ cần thiết, kiến thức về quản trị khách hàng để giải thích vì sao đo theo cách đó.
+Mỗi nhận định trong các mục sau đều đi kèm con số lấy từ kho dữ liệu và mã truy vấn để đối chiếu; ở những chỗ cần thiết, báo cáo dẫn thêm kiến thức về quản trị khách hàng để giải thích vì sao chọn cách đo đó thay vì cách khác.
 
-Công cụ sử dụng gồm Microsoft SQL Server 2022 Express để khôi phục và lưu dữ liệu, DBeaver để truy vấn, và \LaTeX{} để trình bày. Các câu truy vấn được lưu trong tệp đính kèm \texttt{verify\_queries.sql} (đánh mã V01--V12, kết quả chạy trong \texttt{verify\_results.txt}) và ba tệp \texttt{analyze\_queries*.sql}; mỗi con số trong báo cáo được ghi kèm mã truy vấn tương ứng khi cần đối chiếu.
+Công cụ sử dụng gồm Microsoft SQL Server 2022 (Developer Edition, chạy trong Docker trên Linux) để khôi phục và lưu dữ liệu, DBeaver và \texttt{sqlcmd} để truy vấn, và LaTeX để trình bày. Các câu truy vấn được lưu trong tệp đính kèm \texttt{verify\_queries.sql} (đánh mã V01--V16, kết quả chạy trong \texttt{verify\_results.txt}), tệp \texttt{tour\_queries.sql} (các truy vấn minh hoạ nội dung kho ở Phụ lục~\ref{app:queries}) và ba tệp \texttt{analyze\_queries*.sql}; mỗi con số trong báo cáo được ghi kèm mã truy vấn tương ứng khi cần đối chiếu.
 
 % =====================================================================
 \section{Khách hàng của chúng ta là ai?}
@@ -306,7 +582,7 @@ Công cụ sử dụng gồm Microsoft SQL Server 2022 Express để khôi phụ
 \subsection{Hai nhóm khách hàng rất khác nhau}
 Trong 19.119 khách đã mua hàng, 18.484 người (96,7\%) là khách cá nhân mua online và chỉ 635 (3,3\%) là cửa hàng đại lý. Nhìn theo doanh thu thì bức tranh đảo ngược: nhóm đại lý ít ỏi mang lại 74\% doanh thu, với giá trị mỗi đơn cao gấp 20 lần đơn của khách cá nhân (Bảng~\ref{tab:channel}).
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Hai nhóm khách hàng của CompanyX}
 \label{tab:channel}
@@ -326,7 +602,7 @@ Sự tập trung này còn rõ hơn khi xếp toàn bộ khách theo tổng số
 \subsection{Chân dung khách cá nhân}
 Hồ sơ khảo sát của 18.484 khách cá nhân (Bảng~\ref{tab:demo}; tuổi tính tại ngày cuối dữ liệu 30/06/2014, ngày sinh trong dữ liệu trải từ 1910 đến 1980 nên không có khách dưới 33 tuổi) cho thấy một tệp khách khá đồng nhất: phần lớn ở tuổi 40--59, thu nhập 25--75 nghìn USD một năm, đã kết hôn, có con, có nhà riêng và xe hơi, sống ở Mỹ, Úc hoặc Tây Âu. Tỷ lệ nam nữ gần như bằng nhau.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Chân dung khách cá nhân}
 \label{tab:demo}
@@ -341,7 +617,7 @@ Hôn nhân & Đã kết hôn 54\% -- Độc thân 46\% \\
 Thu nhập/năm & Dưới 25k: 16\% -- 25--50k: 31\% -- 50--75k: 30\% -- 75--100k: 15\% -- Trên 100k: 9\% \\
 Nghề nghiệp & Chuyên môn 30\% -- Lao động kỹ thuật 25\% -- Quản lý 17\% -- Văn phòng 16\% -- Lao động phổ thông 13\% \\
 Học vấn & Cử nhân 29\% -- Cao đẳng dở dang 27\% -- Trung học 18\% -- Sau đại học 17\% \\
-Gia đình & 72\% có con; 68\% có nhà riêng; 74\% có ít nhất 1 xe hơi \\
+Gia đình & 72\% có con; 68\% có nhà riêng; 77\% có ít nhất 1 xe hơi \\
 Quốc gia & Mỹ 42\% -- Úc 19\% -- Anh 10\% -- Pháp 10\% -- Đức 10\% -- Canada 9\% \\
 \bottomrule
 \end{tabularx}
@@ -353,23 +629,24 @@ Dữ liệu không ghi nhận mục đích sử dụng, nhưng hồ sơ này (tr
 701 cửa hàng trong hệ thống chia khá đều thành ba loại: nhà sản xuất xe đạp (238), cửa hàng xe đạp (231) và cửa hàng bán online (232). Về chuyên môn, 300 cửa hàng thiên về xe đường trường, 246 về xe địa hình và 155 về xe du lịch. Doanh số năm của cửa hàng dao động từ 300 nghìn đến 3 triệu USD, trong đó 204 cửa hàng ở mức 3 triệu; quy mô trung bình 40 nhân viên; năm mở cửa từ 1970 đến 2001. Đó là những doanh nghiệp cỡ vừa, hoạt động lâu năm và có nhân viên kinh doanh của CompanyX phụ trách trực tiếp, nên mối quan hệ cá nhân giữa hai bên có thể ảnh hưởng lớn đến việc họ ở lại hay ra đi.
 
 \subsection{Khách hàng ở đâu?}
-Hai vùng của Mỹ (Southwest, Northwest) và Úc là ba thị trường đông khách nhất (Hình~\ref{fig:territory}). Úc đông khách thứ hai nhưng doanh thu chỉ đứng thứ năm vì gần như toàn khách online. Ngược lại, ba vùng Southeast, Central và Northeast của Mỹ có rất ít khách nhưng doanh thu cao, vì gần như toàn đại lý. Cơ cấu này sẽ giải thích một phần khác biệt về tỷ lệ rời bỏ giữa các vùng ở Mục~\ref{sec:churn}.
+Hai vùng của Mỹ (Southwest, Northwest) và Úc là ba thị trường đông khách nhất (Hình~\ref{fig:territory}). Úc đông khách thứ hai (3.625 khách) nhưng doanh thu chỉ đứng thứ tư (11,8 triệu USD) vì gần như toàn khách online. Ngược lại, ba vùng Southeast, Central và Northeast của Mỹ có rất ít khách nhưng doanh thu cao, vì gần như toàn đại lý. Cơ cấu này sẽ giải thích một phần khác biệt về tỷ lệ rời bỏ giữa các vùng ở Mục~\ref{sec:churn}.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
   xbar, bar width=7pt, width=0.9\textwidth, height=7.2cm,
-  xlabel={Số khách hàng}, xmin=0, xmax=5600,
+  xlabel={Số khách hàng có đơn}, xmin=0, xmax=5400,
   symbolic y coords={Northeast,Central,Southeast,Canada,Germany,France,United Kingdom,Northwest,Australia,Southwest},
   ytick=data, y tick label style={font=\scriptsize}, xmajorgrids, grid style={gray!25},
   nodes near coords, nodes near coords align={horizontal}, every node near coord/.append style={font=\scriptsize},
+  nodes near coords style={/pgf/number format/fixed, /pgf/number format/fixed zerofill, /pgf/number format/precision=1},
   enlarge y limits=0.07
 ]
-\addplot[fill=cBar, draw=cBar!70!black] coordinates {(113,Northeast) (132,Central) (176,Southeast) (1791,Canada) (1852,Germany) (1884,France) (1991,United Kingdom) (3520,Northwest) (3665,Australia) (4696,Southwest)};
+\addplot[fill=cBar, draw=cBar!70!black] coordinates {(57,Northeast) (69,Central) (91,Southeast) (1677,Canada) (1812,Germany) (1844,France) (1951,United Kingdom) (3428,Northwest) (3625,Australia) (4565,Southwest)};
 \end{axis}
 \end{tikzpicture}
-\caption{Số khách hàng theo lãnh thổ bán hàng.}
+\caption{Số khách hàng theo lãnh thổ bán hàng (19.119 khách đã có ít nhất một đơn; truy vấn V14). Nếu đếm cả 701 bản ghi khách không có đơn thì tổng là 19.820 và thứ tự các vùng không đổi.}
 \label{fig:territory}
 \end{figure}
 
@@ -379,7 +656,7 @@ Hai vùng của Mỹ (Southwest, Northwest) và Úc là ba thị trường đôn
 \subsection{Doanh thu và độ phủ khách hàng theo danh mục sản phẩm}
 Tính theo giá bán trước thuế và phí vận chuyển (tổng 109,8 triệu USD; cộng thêm 10,2 triệu thuế và 3,2 triệu phí vận chuyển sẽ ra con số 123,16 triệu ở Bảng~\ref{tab:overview}), xe đạp chiếm 94,6 triệu USD, tức 86\%; linh kiện 11,8 triệu (11\%), quần áo 2,1 triệu (2\%) và phụ kiện 1,3 triệu (1\%). Nhưng nếu đếm số khách từng mua thì thứ tự đảo lại: phụ kiện có 15.461 khách, xe đạp 9.719, quần áo 7.327 và linh kiện 580 (Hình~\ref{fig:category}).
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -412,9 +689,9 @@ Trong 18.484 khách online, 7.892 người (43\%) chỉ mua một loại hàng, 
 \section{Khách hàng mua như thế nào?}
 \label{sec:how}
 \subsection{Mua bao nhiêu lần?}
-Hơn 60\% khách chỉ mua đúng một lần (11.649 người); 29\% mua hai lần; chỉ 10\% mua từ ba lần trở lên (Hình~\ref{fig:freq}). Trung bình mỗi khách mua 1,65 lần. Nhóm mua từ sáu lần trở lên (337 khách) gần như toàn bộ là đại lý đặt hàng định kỳ.
+Hơn 60\% khách chỉ mua đúng một lần (11.649 người); 29\% mua hai lần; chỉ 10\% mua từ ba lần trở lên (Hình~\ref{fig:freq}). Trung bình mỗi khách mua 1,65 lần. Nhóm mua từ sáu lần trở lên gồm 337 khách, trong đó 293 người (87\%) là đại lý đặt hàng định kỳ và 44 người là khách cá nhân.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -440,7 +717,7 @@ Hình~\ref{fig:quarter} vẽ tổng số đơn của cả hai kênh theo quý (t
 
 Dữ liệu chưa đủ để kết luận về mùa vụ. Khi tách theo năm (V09b), số đơn online mỗi tháng tăng hơn 5 lần từ 2013 sang 2014, nên tổng theo tháng bị chi phối bởi tăng trưởng chứ không phải chu kỳ trong năm; hơn nữa năm 2011 chỉ có từ tháng 6 và năm 2014 chỉ đến tháng 6, mỗi tháng không có đủ số năm quan sát để so sánh. Nhóm không đưa ra nhận định về tháng cao điểm.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -463,7 +740,7 @@ Hệ quả là phần lớn khách cá nhân là khách mới, chỉ xuất hi�
 \subsection{Vì sao họ mua?}
 Lý do mua chỉ được ghi nhận cho kênh online: 23.012 trong 27.659 đơn online (83,2\%) có ít nhất một lý do, không đơn đại lý nào có (truy vấn V08a, V08b). Một đơn có thể gắn nhiều lý do: 18.530 đơn có một lý do, 4.329 đơn có hai và 153 đơn có ba, tổng cộng 27.647 dòng lý do. Bảng~\ref{tab:reason} đếm theo số đơn để tránh một đơn bị tính nhiều lần.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Lý do mua của đơn hàng online (23.012 đơn có ghi lý do; một đơn có thể có nhiều lý do)}
 \label{tab:reason}
@@ -504,7 +781,7 @@ Nếu áp dụng cùng nguyên tắc ``đủ thời gian quan sát'' cho ngưỡ
 
 Việc tách một giai đoạn theo dõi và một giai đoạn kiểm tra là cách làm quen thuộc trong nghiên cứu khách hàng không hợp đồng: Fader, Hardie và Lee (2005) ước lượng mô hình trên kỳ hiệu chuẩn rồi đánh giá trên kỳ giữ lại; Reinartz và Kumar (2000) cũng xác định khách còn hoạt động hay không dựa trên hành vi mua sau một mốc thời gian. Các nghiên cứu này không quy định ngưỡng 12 tháng; con số 12 tháng ở đây là lựa chọn của nhóm, dựa trên việc khách cá nhân của CompanyX quay lại trung bình sau 317 ngày và dữ liệu chỉ còn đúng 12 tháng sau mốc.
 
-Cần nói rõ đây là \emph{nhãn rời bỏ theo quy ước quan sát 12 tháng}, không phải bằng chứng khách đã rời bỏ vĩnh viễn. Mục~\ref{sec:how} cho thấy 38\% số lần quay lại của khách cá nhân cách lần mua trước hơn một năm, và trong toàn bộ dữ liệu có 3.486 khách từng quay lại sau khoảng nghỉ dài hơn 365 ngày. Một phần khách bị gắn nhãn ``rời bỏ'' vì thế vẫn có thể mua tiếp sau khi dữ liệu kết thúc. Quy ước 12 tháng là sự đánh đổi: cửa sổ ngắn hơn sẽ gắn nhãn sai nhiều khách chỉ mua thưa, cửa sổ dài hơn sẽ không còn đủ dữ liệu để kiểm tra. Khi có thêm dữ liệu, nên thử lại với cửa sổ 18 hoặc 24 tháng.
+Cần nói rõ đây là \emph{nhãn rời bỏ theo quy ước quan sát 12 tháng}, không phải bằng chứng khách đã rời bỏ vĩnh viễn. Mục~\ref{sec:how} cho thấy 38\% số lần quay lại của khách cá nhân cách lần mua trước hơn một năm, và trong toàn bộ dữ liệu có 3.486 khách từng quay lại sau khoảng nghỉ dài hơn 365 ngày (truy vấn V13). Một phần khách bị gắn nhãn ``rời bỏ'' vì thế vẫn có thể mua tiếp sau khi dữ liệu kết thúc. Quy ước 12 tháng là sự đánh đổi: cửa sổ ngắn hơn sẽ gắn nhãn sai nhiều khách chỉ mua thưa, cửa sổ dài hơn sẽ không còn đủ dữ liệu để kiểm tra. Khi có thêm dữ liệu, nên thử lại với cửa sổ 18 hoặc 24 tháng.
 
 Một nguyên tắc quan trọng khi tính các chỉ tiêu ở những mục sau: mọi đặc điểm dùng để so sánh nhóm rời bỏ và nhóm ở lại (số lần mua, loại hàng đã mua) đều \emph{chỉ tính trên giai đoạn theo dõi}, tức trước mốc 30/06/2013. Nếu tính cả giai đoạn kiểm tra thì bản thân đặc điểm đã chứa kết quả cần dự báo, và mọi so sánh sẽ vô nghĩa.
 
@@ -514,7 +791,7 @@ Tỷ lệ rời bỏ của đại lý là 28,6\% (153 trên 535), so với 15,8\
 \subsection{Khách tại Úc có tỷ lệ rời bỏ quan sát thấp nhất}
 Tỷ lệ rời bỏ theo lãnh thổ chênh nhau tới 10 lần (Hình~\ref{fig:churn-territory}): Canada 42\%, Southeast 38\%, Central 37\%, ba vùng Northwest, Southwest, Northeast khoảng 27\%; Pháp 16\%, Đức 11\%, Anh 9\%; Úc chỉ 4\%.
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -536,9 +813,9 @@ Một phần khác biệt đến từ cơ cấu khách: Bắc Mỹ có nhiều �
 
 \subsection{Số lần mua trước mốc và tỷ lệ rời bỏ}
 \label{sec:freq-churn}
-Theo mô hình RFM, khách đã mua nhiều lần thường được kỳ vọng gắn bó hơn. Dữ liệu CompanyX lại cho kết quả ngược lại khi số lần mua chỉ được đếm trong giai đoạn theo dõi (Bảng~\ref{tab:churn-freq}). Trong 5.671 khách cá nhân đủ điều kiện xét, 5.357 người mới mua đúng một lần trước mốc và 13,4\% trong số họ rời bỏ; 311 người đã mua hai lần trước mốc thì có tới 57,2\% rời bỏ. Với đại lý, tỷ lệ rời bỏ cao nhất ở nhóm đã đặt 3--5 đơn (34,2\%) và thấp hơn ở nhóm đặt từ 6 đơn (23,0\%).
+Theo mô hình RFM, khách đã mua nhiều lần thường được kỳ vọng gắn bó hơn. Dữ liệu CompanyX lại cho kết quả ngược lại khi số lần mua chỉ được đếm trong giai đoạn theo dõi (Bảng~\ref{tab:churn-freq}). Trong 5.671 khách cá nhân đủ điều kiện xét, 5.357 người mới mua đúng một lần trước mốc và 13,4\% trong số họ rời bỏ; 311 người đã mua hai lần trước mốc thì có tới 57,2\% rời bỏ (3 khách còn lại mua 3--5 lần, không ai rời bỏ, cỡ mẫu quá nhỏ để nhận xét). Với đại lý, tỷ lệ rời bỏ cao nhất ở nhóm đã đặt 3--5 đơn (34,2\%) và thấp hơn ở nhóm đặt từ 6 đơn (23,0\%).
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Tỷ lệ rời bỏ theo số lần mua trong giai đoạn theo dõi (trước 30/06/2013)}
 \label{tab:churn-freq}
@@ -549,14 +826,64 @@ Theo mô hình RFM, khách đã mua nhiều lần thường được kỳ vọng
 \midrule
 Khách cá nhân & 1 lần & 5.357 & 719 & 13,4\% \\
 Khách cá nhân & 2 lần & 311 & 178 & 57,2\% \\
+Khách cá nhân & 3--5 lần & 3 & 0 & 0,0\% \\
 Đại lý & 1--2 lần & 147 & 34 & 23,1\% \\
 Đại lý & 3--5 lần & 266 & 91 & 34,2\% \\
 Đại lý & 6 lần trở lên & 122 & 28 & 23,0\% \\
+\midrule
+\textit{Tổng} & & \textit{6.206} & \textit{1.050} & \textit{16,9\%} \\
 \bottomrule
 \end{tabular}
+
+\vspace{4pt}
+{\footnotesize Nguồn: truy vấn V05a. Cột ``Đủ điều kiện'' cộng lại bằng 5.671 khách cá nhân và 535 đại lý.}
 \end{table}
 
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=20pt, width=0.85\textwidth, height=5.6cm,
+  ylabel={Tỷ lệ rời bỏ (\%)}, xlabel={Số lần mua trong giai đoạn theo dõi},
+  symbolic x coords={CN1,CN2,DL12,DL35,DL6},
+  xtick=data, xticklabels={Cá nhân\\1 lần,Cá nhân\\2 lần,Đại lý\\1--2 lần,Đại lý\\3--5 lần,Đại lý\\6+ lần},
+  xticklabel style={align=center, font=\scriptsize},
+  ymin=0, ymax=68, ymajorgrids, grid style={gray!25},
+  nodes near coords, every node near coord/.append style={font=\scriptsize},
+  nodes near coords style={/pgf/number format/fixed, /pgf/number format/fixed zerofill, /pgf/number format/precision=1},
+  enlarge x limits=0.12
+]
+\addplot[fill=cChurn, draw=cChurn!70!black] coordinates {(CN1,13.4) (CN2,57.2) (DL12,23.1) (DL35,34.2) (DL6,23.0)};
+\end{axis}
+\end{tikzpicture}
+\caption{Tỷ lệ rời bỏ theo số lần mua \emph{trước mốc} 30/06/2013 (truy vấn V05a). Cỡ mẫu lần lượt là 5.357, 311, 147, 266 và 122 khách.}
+\label{fig:churn-freq}
+\end{figure}
+
 Kết quả này giữ nguyên chiều hướng trong từng nhóm khách gia nhập: với khách cá nhân mua lần đầu năm 2011, tỷ lệ rời bỏ là 19\% ở nhóm một lần và 41\% ở nhóm hai lần; năm 2012 là 7\% và 70\%; nửa đầu 2013 là 20\% và 63\%. Vậy đây không đơn thuần là chuyện khách cũ đã ``hết chu kỳ''.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=15pt, width=0.8\textwidth, height=5.6cm,
+  ylabel={Tỷ lệ rời bỏ (\%)}, xlabel={Nhóm khách theo năm mua lần đầu},
+  symbolic x coords={2011,2012,2013H1},
+  xtick=data, ymin=0, ymax=84, ymajorgrids, grid style={gray!25},
+  nodes near coords, every node near coord/.append style={font=\scriptsize},
+  nodes near coords style={/pgf/number format/fixed, /pgf/number format/fixed zerofill, /pgf/number format/precision=1},
+  enlarge x limits=0.3,
+  legend style={at={(0.5,-0.3)}, anchor=north, legend columns=2, font=\small, draw=gray!40}
+]
+\addplot[fill=cBar, draw=cBar!70!black] coordinates {(2011,19.0) (2012,6.7) (2013H1,20.4)};
+\addplot[fill=cChurn, draw=cChurn!70!black] coordinates {(2011,40.8) (2012,70.2) (2013H1,63.5)};
+\legend{Mua 1 lần trước mốc, Mua 2 lần trở lên trước mốc}
+\end{axis}
+\end{tikzpicture}
+\caption{Chiều hướng ``mua nhiều hơn thì rời bỏ nhiều hơn'' lặp lại ở cả ba nhóm khách gia nhập (V05c, khách cá nhân).}
+\label{fig:cohort}
+\end{figure}
+
 
 Nhóm chưa có đủ dữ liệu để giải thích chắc chắn. Một cách hiểu hợp lý là với hàng lâu bền, lần mua thứ hai trong vòng hai năm đầu thường đã đáp ứng trọn nhu cầu (ví dụ mua xe rồi mua nốt phụ kiện đi kèm), nên khách không còn lý do quay lại; trong khi khách mới mua một chiếc xe vẫn còn nhu cầu mua thêm. Cũng cần lưu ý AdventureWorks là dữ liệu mô phỏng, và hành vi trong đó có thể không giống hoàn toàn khách hàng thực. Dù giải thích nào đúng, kết luận thực tiễn là số lần mua trong quá khứ \emph{không} thể dùng một mình như chỉ báo gắn bó ở CompanyX; mô hình dự đoán sau này cần xét nó cùng với thời điểm gia nhập và loại hàng đã mua.
 
@@ -565,7 +892,7 @@ Bản nháp đầu của báo cáo từng đưa ra kết luận ngược lại (
 \subsection{Loại hàng đã mua trước mốc và tỷ lệ rời bỏ}
 Cùng nguyên tắc chỉ dùng thông tin trước mốc, nhóm xét loại hàng mà 5.671 khách cá nhân đủ điều kiện đã mua trong giai đoạn theo dõi (truy vấn V06a, V06b). Vì một khách có thể mua nhiều danh mục, Bảng~\ref{tab:churn-cat} trình bày cả cách đếm theo từng danh mục (không loại trừ nhau) và cách chia thành hai nhóm loại trừ nhau.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Tỷ lệ rời bỏ theo loại hàng đã mua trong giai đoạn theo dõi (khách cá nhân)}
 \label{tab:churn-cat}
@@ -586,6 +913,27 @@ Có mua phụ kiện hoặc quần áo & 487 & 341 & 70,0\% \\
 \end{tabularx}
 \end{table}
 
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=20pt, width=0.85\textwidth, height=5.6cm,
+  ylabel={Tỷ lệ rời bỏ (\%)},
+  symbolic x coords={bike,acc,cloth,onlybike,hasacc},
+  xtick=data, xticklabels={Đã mua\\xe đạp,Đã mua\\phụ kiện,Đã mua\\quần áo,Chỉ mua\\xe đạp,Có phụ kiện\\hoặc quần áo},
+  xticklabel style={align=center, font=\scriptsize},
+  ymin=0, ymax=88, ymajorgrids, grid style={gray!25},
+  nodes near coords, every node near coord/.append style={font=\scriptsize},
+  nodes near coords style={/pgf/number format/fixed, /pgf/number format/fixed zerofill, /pgf/number format/precision=1},
+  enlarge x limits=0.12
+]
+\addplot[fill=cChurn, draw=cChurn!70!black] coordinates {(bike,15.6) (acc,67.8) (cloth,74.7) (onlybike,10.7) (hasacc,70.0)};
+\end{axis}
+\end{tikzpicture}
+\caption{Tỷ lệ rời bỏ theo loại hàng đã mua \emph{trước mốc}, khách cá nhân (V06a, V06b). Ba cột trái không loại trừ nhau; hai cột phải là hai nhóm loại trừ nhau.}
+\label{fig:churn-cat}
+\end{figure}
+
 Kết quả trái với kỳ vọng ban đầu và trùng lắp nhiều với Bảng~\ref{tab:churn-freq}: trong 314 khách đã mua hai lần trở lên trước mốc có 272 người đã mua phụ kiện hoặc quần áo (V06c). Nói cách khác, ``đã mua lần hai'' và ``đã mua phụ kiện'' phần lớn là cùng một nhóm khách, và cả hai đi kèm tỷ lệ rời bỏ cao trong kỳ kiểm tra.
 
 Phát hiện ở Mục~\ref{sec:what} rằng phụ kiện là danh mục có nhiều khách mua nhất vẫn đúng, nhưng dữ liệu hiện có không cho phép kết luận việc mua phụ kiện giúp giữ chân khách. Nếu muốn dùng phụ kiện làm công cụ giữ chân, đó phải là một giả thuyết để thử nghiệm (ví dụ so sánh hai nhóm khách được và không được mời mua phụ kiện), chứ không phải kết luận rút ra từ dữ liệu lịch sử.
@@ -593,11 +941,11 @@ Phát hiện ở Mục~\ref{sec:what} rằng phụ kiện là danh mục có nhi
 \subsection{Chênh lệch tỷ lệ rời bỏ theo đặc điểm nhân khẩu học}
 Bảng~\ref{tab:churn-demo} và Hình~\ref{fig:churn-income} tổng hợp tỷ lệ rời bỏ của 5.671 khách cá nhân đủ điều kiện xét theo từng đặc điểm (truy vấn V07a). Mỗi ô ghi tỷ lệ rời bỏ kèm số khách rời bỏ trên tổng số khách của nhóm. Tuổi được tính tại mốc 30/06/2013; các đặc điểm khác lấy từ khảo sát, không có ngày ghi nhận, nên được xem là không đổi trong kỳ.
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Tỷ lệ rời bỏ theo đặc điểm cá nhân (rời bỏ / tổng số khách của nhóm)}
 \label{tab:churn-demo}
-\footnotesize
+\small
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.6cm} X c}
 \toprule
 \rowcolor{tblhead} \textbf{Đặc điểm} & \textbf{Tỷ lệ rời bỏ theo nhóm} & \textbf{Chênh lệch} \\
@@ -616,7 +964,7 @@ Hôn nhân & Đã kết hôn: 15,7\% (450/2.870) -- Độc thân: 16,0\% (447/2.
 \end{tabularx}
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -625,7 +973,8 @@ Hôn nhân & Đã kết hôn: 15,7\% (450/2.870) -- Độc thân: 16,0\% (447/2.
   symbolic x coords={i1,i2,i3,i4,i5},
   xtick=data, xticklabels={Dưới 25k,25--50k,50--75k,75--100k,Trên 100k},
   ymin=0, ymax=30, ymajorgrids, grid style={gray!25},
-  nodes near coords, every node near coord/.append style={font=\scriptsize}, enlarge x limits=0.15
+  nodes near coords, every node near coord/.append style={font=\scriptsize}, enlarge x limits=0.15,
+  nodes near coords style={/pgf/number format/fixed, /pgf/number format/fixed zerofill, /pgf/number format/precision=1}
 ]
 \addplot[fill=cChurn, draw=cChurn!70!black] coordinates {(i1,10.2) (i2,23.2) (i3,20.4) (i4,5.9) (i5,6.0)};
 \end{axis}
@@ -641,7 +990,7 @@ Tuổi, giới tính và tình trạng hôn nhân cho chênh lệch chỉ 0--2 �
 Xu hướng chung, đặc điểm hành vi (Bảng~\ref{tab:churn-freq}, \ref{tab:churn-cat}) tạo ra chênh lệch lớn hơn nhiều so với đặc điểm cá nhân, phù hợp với kết quả của Buckinx và Van den Poel (2005) trong bán lẻ không hợp đồng, dù chiều của mối liên hệ ở CompanyX khác với nghiên cứu đó.
 
 \subsection{Tổng hợp: dấu hiệu nào đi kèm với việc rời bỏ?}
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering
 \caption{Xếp hạng sơ bộ các dấu hiệu theo mức độ phân biệt khách ở lại và khách rời bỏ}
 \label{tab:factor-rank}
@@ -672,11 +1021,13 @@ Có, với các điều kiện sau. Kho dữ liệu có lịch sử giao dịch 
 
 \subsection{Những giới hạn cần ghi nhận}
 \begin{itemize}
-    \item \textbf{Không có nhãn rời bỏ thật.} Nhãn 12 tháng là quy ước; 3.486 khách trong dữ liệu từng quay lại sau hơn một năm nghỉ, nên một phần khách gắn nhãn ``rời bỏ'' có thể chỉ mua thưa.
-    \item \textbf{Mất cân đối thời gian.} 76\% đơn hàng dồn vào 12 tháng cuối; chỉ 6.206 trong 19.119 khách có đủ thời gian quan sát. Kết quả về rời bỏ vì thế phản ánh nhóm khách gia nhập trước giữa 2013, không đại diện cho toàn bộ khách.
+    \item \textbf{Không có nhãn rời bỏ thật.} Nhãn 12 tháng là quy ước; 3.486 khách trong dữ liệu từng quay lại sau hơn một năm nghỉ (V13), nên một phần khách gắn nhãn ``rời bỏ'' có thể chỉ mua thưa.
+    \item \textbf{Mất cân đối thời gian.} 73,7\% đơn hàng dồn vào 12 tháng cuối (78,4\% nếu chỉ xét kênh online); chỉ 6.206 trong 19.119 khách có đủ thời gian quan sát. Kết quả về rời bỏ vì thế phản ánh nhóm khách gia nhập trước giữa 2013, không đại diện cho toàn bộ khách.
     \item \textbf{Chỉ có một kỳ kiểm tra.} Dữ liệu kết thúc ngày 30/06/2014 nên không thể kiểm tra lại với mốc khác hoặc cửa sổ dài hơn.
     \item \textbf{Thiếu biến về động cơ và tương tác.} Không có dữ liệu về khiếu nại, trả hàng, tương tác marketing thực tế, giá của đối thủ; lý do mua chỉ có ở kênh online và do khách tự khai.
     \item \textbf{Dữ liệu mô phỏng.} CompanyX là AdventureWorks; một số quan hệ (ví dụ khách mua hai lần trước mốc rời bỏ nhiều hơn) có thể là đặc điểm của cách sinh dữ liệu chứ không phải hành vi thực.
+    \item \textbf{Dữ liệu đã bị can thiệp.} 8 ràng buộc kiểm tra bị tắt và hai cột bị nới thành cho phép rỗng để chứa được sáu đơn hỏng. Điều này có nghĩa kho dữ liệu nhận được không còn ở trạng thái gốc, nên mọi kiểm tra chất lượng phải dựa vào truy vấn trực tiếp chứ không thể tin vào khai báo ràng buộc của cơ sở dữ liệu.
+    \item \textbf{Ba trường không dùng được.} \texttt{Status} chỉ có hai trong sáu giá trị mà tài liệu mô tả; \texttt{ShipDate} luôn bằng ngày đặt cộng bảy ngày nên không chứa thông tin về chất lượng giao hàng; hạn dùng thẻ tín dụng kết thúc trước ngày đặt ở 30.334 đơn. Không trường nào trong ba trường này dùng được để giải thích việc rời bỏ.
     \item \textbf{Chưa kiểm định thống kê và chưa phân tích nhiều biến.} Mọi chênh lệch trong báo cáo là mô tả đơn biến.
 \end{itemize}
 
@@ -684,8 +1035,9 @@ Có, với các điều kiện sau. Kho dữ liệu có lịch sử giao dịch 
 Từ phân tích này, các phần Problem Statement, mô hình hóa và thiết kế hệ hỗ trợ quyết định có thể dùng: (i) định nghĩa nhãn rời bỏ theo mốc 30/06/2013 và kỳ kiểm tra 12 tháng, kèm nguyên tắc mọi đặc trưng phải tính trước mốc; (ii) tập phân tích 6.206 khách (hoặc 6.148 nếu loại đơn hủy và đơn âm) với nhãn 16,9\% (17,6\%); (iii) danh sách bảng và cột nguồn ở Mục~\ref{sec:overview}; (iv) các câu hỏi còn mở: vì sao khách tại Úc có tỷ lệ rời bỏ thấp hơn hẳn các thị trường online tương tự; vì sao khách đã mua hai lần hoặc đã mua phụ kiện trước mốc lại rời bỏ nhiều hơn; đại lý có nên dùng ngưỡng ngắn hơn 12 tháng không; và liệu thu nhập, lý do mua ``giá cả'' và việc rời bỏ có liên hệ với nhau khi xét đồng thời.
 
 % =====================================================================
+\clearpage
 \section{Kết luận}
-Kho dữ liệu CompanyX là bộ AdventureWorks với 72 bảng và 24 view, trong đó khoảng 10 bảng thuộc hai nhóm Sales và Person đủ để mô tả khách hàng và lịch sử mua. Dữ liệu sạch, các liên kết đầy đủ, và chỉ cần loại chưa tới 1\% bản ghi (701 dòng khách không có đơn, 315 đơn hủy, 2 đơn âm).
+Kho dữ liệu CompanyX là bộ AdventureWorks với 72 bảng và 24 view, trong đó khoảng 10 bảng thuộc hai nhóm Sales và Person đủ để mô tả khách hàng và lịch sử mua. Các liên kết giữa bảng còn nguyên vẹn và mọi phép cộng đều khớp, nhưng dữ liệu \emph{không} sạch như vẻ bề ngoài: 8 ràng buộc kiểm tra đang bị tắt, hai cột bị đổi thành cho phép rỗng, và có một vùng hỏng gồm sáu đơn hàng liên tiếp với 75 dòng sản phẩm, mỗi đơn mang đúng một kiểu lỗi, cùng ba dòng hỏng trong bảng khuyến mãi. Tính cả 701 dòng khách không có đơn và 315 đơn hủy thì phần phải loại vẫn dưới 1,1\% bản ghi, và quan trọng hơn, việc loại chúng không làm đổi bất kỳ kết luận nào về rời bỏ.
 
 Khách hàng gồm hai nhóm rất khác nhau: 18.484 khách cá nhân mua online, phần lớn chỉ mua một lần với giá trị trung bình 1.755 USD mỗi khách trong 37 tháng; và 635 đại lý đặt hàng gần như mỗi quý, trung bình 142.856 USD mỗi đại lý, chiếm 74\% tổng phải trả. Xe đạp chiếm 86\% doanh thu trước thuế; phụ kiện chiếm 1\% doanh thu nhưng có nhiều khách mua nhất. Ở kênh online, ba phần tư đơn có ghi lý do mua nêu ``giá cả''.
 
@@ -693,9 +1045,1137 @@ Dữ liệu không có nhãn rời bỏ; theo quy ước mốc 30/06/2013 và k�
 
 Dữ liệu đủ điều kiện để bước sang giai đoạn nghiên cứu churn, với các giới hạn về nhãn quy ước, mất cân đối thời gian, thiếu biến động cơ và bản chất mô phỏng của dữ liệu đã nêu ở Mục~\ref{sec:limits}.
 
+
+% =====================================================================
+\clearpage
+\appendix
+\renewcommand{\appendixname}{Phụ lục}
+\titleformat{\section}[block]{\normalfont\Large\bfseries}{\appendixname~\thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{16pt plus 3pt minus 2pt}{8pt}
+
+\section{Môi trường thực thi và cách tái lập kết quả}
+\label{app:env}
+
+Toàn bộ số liệu trong báo cáo được sinh lại từ đầu trong một lần chạy duy nhất trên bản khôi phục từ \texttt{CompanyX.bak}. Hình~\ref{fig:pipeline} mô tả đường đi của dữ liệu, từ tệp sao lưu đến con số in trong báo cáo.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, font=\scriptsize\sffamily, align=center,
+              inner sep=5pt, minimum height=1.0cm, text width=2.95cm},
+  src/.style={box, fill=gray!12},
+  eng/.style={box, fill=blue!8},
+  fin/.style={box, fill=green!8},
+  fl/.style={-{Latex[length=2.2mm]}, thick, gray!55!black},
+  lb/.style={font=\tiny, fill=white, inner sep=1.5pt}
+]
+\node[src] (bak) at (0,0)      {\texttt{CompanyX.bak}\\ 214 MB};
+\node[eng] (sql) at (5,0)      {SQL Server 2022\\ CSDL \texttt{CompanyX}};
+\node[src] (vq)  at (10,0)     {\texttt{verify\_queries.sql}\\ V01--V16};
+\node[fin] (res) at (0,-2.4)   {\texttt{verify\_results.txt}\\ kết quả thô};
+\node[fin] (tex) at (5,-2.4)   {\texttt{main.tex}\\ + Phụ lục~\ref{app:queries}};
+\node[fin] (pdf) at (10,-2.4)  {\texttt{main.pdf}\\ báo cáo};
+\draw[fl] (bak) -- node[lb]{RESTORE} (sql);
+\draw[fl] (vq)  -- node[lb]{\texttt{sqlcmd}} (sql);
+\draw[fl] (sql.south) -- ++(0,-0.75) node[lb,pos=0.85]{kết quả} -| (res.north);
+\draw[fl] (res) -- node[lb]{đối chiếu} (tex);
+\draw[fl] (tex) -- node[lb]{XeLaTeX} (pdf);
+\end{tikzpicture}
+\caption{Đường đi của dữ liệu từ tệp sao lưu đến con số in trong báo cáo.}
+\label{fig:pipeline}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering
+\caption{Môi trường thực thi}
+\label{tab:env}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.2cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Thành phần} & \textbf{Phiên bản / cấu hình} \\
+\midrule
+Hệ quản trị CSDL & Microsoft SQL Server 2022 (RTM-CU26) 16.0.4265.3, Developer Edition (64-bit) \\
+Nền tảng & Docker, ảnh \texttt{mcr.microsoft.com/mssql/server:2022-latest}, Ubuntu 22.04.5 LTS \\
+Cổng kết nối & 1433 \\
+Cơ sở dữ liệu & \texttt{CompanyX}, khôi phục từ \texttt{CompanyX.bak} (tên gốc bên trong: \texttt{AdventureWorks2022}) \\
+Công cụ truy vấn & DBeaver (khám phá) và \texttt{sqlcmd} của \texttt{mssql-tools18} (chạy tự động, chốt số) \\
+Trình biên dịch báo cáo & XeLaTeX (TeX Live), gói \texttt{pgfplots} 1.18 cho biểu đồ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+Để kết quả trong Phụ lục~\ref{app:queries} có thể kiểm chứng được, một số truy vấn được in kèm bản chép nguyên văn phiên chạy \texttt{sqlcmd}. Trong các khối nền tối, dòng màu sáng ở trên là lệnh đã gõ (mật khẩu được che bằng \texttt{'***'}), phần còn lại là những gì máy chủ in ra, giữ nguyên tên cột, độ rộng cột và dòng tổng kết \texttt{(N rows affected)}. Khối dưới đây xác nhận danh tính máy chủ, cơ sở dữ liệu và quy mô dữ liệu tại thời điểm chạy.
+
+\begin{console}{sqlcmd --- xác nhận máy chủ và quy mô dữ liệu}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/a_env.sql
+phien_ban      an_ban                         csdl       thoi_diem_chay
+-------------- ------------------------------ ---------- -------------------
+16.0.4265.3    Developer Edition (64-bit)     CompanyX   2026-09-16 03:10:42
+
+(1 rows affected)
+don_hang    khach_hang  tong_phai_tra        tu_ngay    den_ngay
+----------- ----------- -------------------- ---------- ----------
+      31465       19119         123155140.61 2011-05-31 2014-06-30
+
+(1 rows affected)
+\end{console}
+
+\qhead{Các lệnh tái lập toàn bộ kết quả}
+
+\begin{lstlisting}[style=shellstyle]
+# 1. Khoi dong SQL Server va nap tep sao luu vao container
+docker run -d --name sqlserver -p 1433:1433 \
+  -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='<mat_khau>' \
+  mcr.microsoft.com/mssql/server:2022-latest
+docker cp CompanyX.bak sqlserver:/var/opt/mssql/data/
+
+# 2. Khoi phuc co so du lieu
+SQLCMD="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $PWD_SA -C"
+docker exec sqlserver $SQLCMD -Q "
+RESTORE DATABASE CompanyX FROM DISK='/var/opt/mssql/data/CompanyX.bak'
+WITH MOVE 'AdventureWorks2022'     TO '/var/opt/mssql/data/CompanyX.mdf',
+     MOVE 'AdventureWorks2022_log' TO '/var/opt/mssql/data/CompanyX_log.ldf';"
+
+# 3. Chay bo truy van kiem chung va ghi ket qua ra tep UTF-8
+docker cp verify_queries.sql sqlserver:/tmp/
+docker exec sqlserver $SQLCMD -f 65001 -h -1 -W -s "|" \
+  -i /tmp/verify_queries.sql > verify_results.txt
+\end{lstlisting}
+
+Hai tuỳ chọn của \texttt{sqlcmd} cần lưu ý. \texttt{-f 65001} đặt bảng mã UTF-8 cho đầu ra; thiếu nó, các nhãn tiếng Việt trong lệnh \texttt{PRINT} bị mất dấu. Đi kèm, mọi chuỗi tiếng Việt trong script phải viết dưới dạng \texttt{PRINT N'\dots'} (chuỗi Unicode), vì chuỗi \texttt{varchar} thường sẽ bị chuyển đổi theo bảng mã của collation và mất dấu ngay trước khi ra khỏi máy chủ. \texttt{-h -1 -W -s "\textbar"} bỏ tiêu đề cột, cắt khoảng trắng thừa và ngăn cách các cột bằng dấu sổ đứng, cho ra định dạng gọn và dễ đối chiếu.
+
+Ngoài ra, script bắt buộc phải mở đầu bằng \texttt{SET QUOTED\_IDENTIFIER ON} và \texttt{SET ANSI\_NULLS ON}. Các truy vấn nhân khẩu học đọc view \texttt{Sales.\allowbreak vPersonDemographics}, mà view này gọi phương thức XML trên cột \texttt{Person.Demographics}; SQL Server từ chối thực thi nếu hai tuỳ chọn trên không bật. DBeaver bật sẵn nên script chạy bình thường trong giao diện, còn \texttt{sqlcmd} thì không, và sẽ dừng với lỗi \texttt{Msg 1934}. Đây là lý do bản đầu của \texttt{verify\_queries.sql} chỉ chạy được trong DBeaver.
+
+
+% =====================================================================
+\clearpage
+\section{Truy vấn kiểm chứng và kết quả thực thi}
+\label{app:queries}
+
+Phụ lục này in nguyên văn các truy vấn đã dùng để chốt số, kèm kết quả trả về. Mã V trong ngoặc ở phần thân báo cáo trỏ tới các mục dưới đây. Toàn bộ truy vấn nằm trong tệp \texttt{verify\_queries.sql}; kết quả thô nằm trong \texttt{verify\_results.txt}. Để tiết kiệm chỗ, những truy vấn lặp cùng một khuôn mẫu trên nhiều chiều dữ liệu chỉ in một chiều đại diện và ghi chú phần còn lại.
+
+Ba mẫu câu lặp lại xuyên suốt và nên đọc trước:
+\begin{itemize}
+  \item \texttt{agg} --- gom mỗi khách thành một dòng với ngày mua đầu (\texttt{MIN(OrderDate)}), dùng để lọc điều kiện đủ thời gian quan sát.
+  \item \texttt{pre} --- các đơn \emph{trước hoặc bằng} mốc 30/06/2013, nguồn duy nhất cho mọi biến đặc trưng.
+  \item \texttt{post} --- các khách có đơn trong kỳ kiểm tra 01/07/2013--30/06/2014. Khách không xuất hiện trong \texttt{post} được gắn nhãn rời bỏ.
+\end{itemize}
+Việc tách \texttt{pre} và \texttt{post} chính là cơ chế chống rò rỉ dữ liệu đã nêu ở Mục~\ref{sec:freq-churn}.
+
+% ---------------------------------------------------------------
+\subsection{Kho dữ liệu có gì bên trong --- xem trực tiếp bằng \texttt{sqlcmd}}
+\label{app:tour}
+
+Mục này không tính toán gì mới. Mục đích của nó là cho người đọc nhìn thấy dữ liệu thật: kho có những bảng nào, mỗi bảng có cột gì, các bảng nối với nhau ra sao, và một bản ghi cụ thể trông như thế nào. Mọi khối dưới đây là bản chép nguyên văn phiên chạy, không chỉnh sửa. Mười truy vấn dùng ở đây được gom trong tệp đính kèm \texttt{tour\_queries.sql}, chạy độc lập với \texttt{verify\_queries.sql}.
+
+\qhead{1. Kho gồm sáu nhóm bảng}
+Câu hỏi đầu tiên khi mở một kho dữ liệu lạ là nó được chia thành những phần nào. Truy vấn vào các bảng hệ thống \texttt{sys.schemas}, \texttt{sys.tables} và \texttt{sys.views} cho ngay bức tranh tổng thể.
+\begin{console}{sqlcmd --- sáu nhóm bảng và số bảng, số view mỗi nhóm}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t1_schema.sql
+nhom             so_bang     so_view
+---------------- ----------- -----------
+Production                25           3
+Sales                     19           7
+Person                    13           2
+HumanResources             6           6
+Purchasing                 5           2
+dbo                        4           4
+
+(6 rows affected)
+\end{console}
+
+Kết quả này là căn cứ cho Bảng~\ref{tab:schemas}. Nhóm \texttt{Production} nhiều bảng nhất (25) nhưng phần lớn phục vụ sản xuất và tồn kho; nhóm \texttt{Sales} với 19 bảng mới là nơi chứa dữ liệu cần cho chủ đề rời bỏ.
+
+\qhead{2. Bảng nào lớn nhất}
+Số bảng chưa nói lên khối lượng dữ liệu. Cộng số dòng từ \texttt{sys.partitions} cho thấy dữ liệu thật sự nằm ở đâu.
+\begin{console}{sqlcmd --- 12 bảng nhiều dòng nhất, kèm số cột}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t2_rows.sql
+bang                                 so_dong     so_cot
+------------------------------------ ----------- -----------
+Sales.SalesOrderDetail                    121317          11
+Production.TransactionHistory             113530           9
+Production.TransactionHistoryArchive       89253           9
+Production.WorkOrder                       72591          10
+Production.WorkOrderRouting                67131          12
+Sales.SalesOrderHeader                     31465          26
+Sales.SalesOrderHeaderSalesReason          27647           3
+Person.BusinessEntity                      20777           3
+Person.PersonPhone                         19972           4
+Person.EmailAddress                        19972           5
+Person.Password                            19972           5
+Person.Person                              19972          13
+
+(12 rows affected)
+\end{console}
+
+Hai bảng đầu của nhóm \texttt{Production} (lịch sử giao dịch kho, 113.530 và 89.253 dòng) lớn hơn cả bảng đơn hàng, nhưng chúng ghi việc nhập xuất vật tư nội bộ chứ không phải hành vi mua của khách, nên không được dùng. Bảng thực sự dùng là \texttt{SalesOrderDetail} (121.317 dòng) và \texttt{SalesOrderHeader} (31.465 dòng, 26 cột).
+
+\qhead{3. Bảng khách hàng có những cột gì}
+\texttt{Sales.Customer} là bảng trung tâm của phân tích. Nó chỉ có 7 cột, và ba trong số đó là khóa ngoại --- đó là lý do bảng này đóng vai trò cầu nối.
+\begin{console}{sqlcmd --- cấu trúc cột của Sales.Customer}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t3_cols.sql
+cot              kieu       nullable khoa_ngoai_toi
+---------------- ---------- -------- ----------------------
+CustomerID       int        khong
+PersonID         int        co       Person
+StoreID          int        co       Store
+TerritoryID      int        co       SalesTerritory
+AccountNumber    varchar    khong
+rowguid          uniqueiden khong
+ModifiedDate     datetime   khong
+
+(7 rows affected)
+\end{console}
+
+Điểm đáng chú ý: \texttt{PersonID} và \texttt{StoreID} đều cho phép rỗng. Chính hai cột này phân biệt khách cá nhân với đại lý, và cũng chính chúng tạo ra ba nhóm bản ghi ở khối tiếp theo.
+
+\qhead{4. Ba nhóm bản ghi trong cùng một bảng khách hàng}
+Đây là chi tiết dễ gây nhầm lẫn nhất của kho dữ liệu, nên cần nhìn tận mắt.
+\begin{console}{sqlcmd --- ba nhóm bản ghi khác nhau trong Sales.Customer}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t4_cust.sql
+CustomerID  PersonID    StoreID     TerritoryID AccountNumber
+----------- ----------- ----------- ----------- -------------
+      11000       13531        NULL           9 AW00011000
+      11001        5454        NULL           9 AW00011001
+      11002       11269        NULL           9 AW00011002
+
+(3 rows affected)
+CustomerID  PersonID    StoreID     TerritoryID AccountNumber
+----------- ----------- ----------- ----------- -------------
+      29484         291         292           5 AW00029484
+      29485         293         294           4 AW00029485
+      29486         295         296           3 AW00029486
+
+(3 rows affected)
+CustomerID  PersonID    StoreID     TerritoryID AccountNumber
+----------- ----------- ----------- ----------- -------------
+          1        NULL         934           1 AW00000001
+          2        NULL        1028           1 AW00000002
+
+(2 rows affected)
+\end{console}
+
+Nhóm thứ nhất có \texttt{PersonID} và \texttt{StoreID} rỗng: khách cá nhân mua online (18.484 người). Nhóm thứ hai có cả hai: người liên hệ của một đại lý (635). Nhóm thứ ba có \texttt{PersonID} rỗng nhưng \texttt{StoreID} có giá trị: 701 bản ghi đại lý không gắn người liên hệ nào, và không bản ghi nào trong nhóm này có đơn hàng. Đó là 701 bản ghi bị loại ở Bảng~\ref{tab:quality}.
+
+\qhead{5. Các bảng nối với nhau bằng gì}
+Khai báo khóa ngoại cho biết đường đi hợp lệ giữa các bảng, không phải suy đoán từ tên cột.
+\begin{console}{sqlcmd --- khóa ngoại của bốn bảng trung tâm}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t10_fk.sql
+bang_con                   qua_cot          toi_bang
+-------------------------- ---------------- --------------------
+Customer                   PersonID         Person
+Customer                   StoreID          Store
+Customer                   TerritoryID      SalesTerritory
+SalesOrderDetail           ProductID        SpecialOfferProduct
+SalesOrderDetail           SalesOrderID     SalesOrderHeader
+SalesOrderDetail           SpecialOfferID   SpecialOfferProduct
+SalesOrderHeader           BillToAddressID  Address
+SalesOrderHeader           CreditCardID     CreditCard
+SalesOrderHeader           CurrencyRateID   CurrencyRate
+SalesOrderHeader           CustomerID       Customer
+SalesOrderHeader           SalesPersonID    SalesPerson
+SalesOrderHeader           ShipMethodID     ShipMethod
+SalesOrderHeader           ShipToAddressID  Address
+SalesOrderHeader           TerritoryID      SalesTerritory
+Store                      BusinessEntityID BusinessEntity
+Store                      SalesPersonID    SalesPerson
+
+(16 rows affected)
+\end{console}
+
+Đọc từ dưới lên thấy rõ chuỗi nối dùng trong hầu hết truy vấn của báo cáo: \texttt{SalesOrderDetail} $\to$ \texttt{SalesOrderHeader} $\to$ \texttt{Customer} $\to$ \texttt{Person} hoặc \texttt{Store}. Cũng thấy \texttt{SalesOrderHeader} còn nối tới địa chỉ, thẻ tín dụng, tỷ giá và phương thức vận chuyển --- những nhánh không dùng cho chủ đề rời bỏ.
+
+\qhead{6. Một đơn hàng cụ thể trông như thế nào}
+Quan hệ một đơn -- nhiều dòng hàng dễ hiểu nhất khi xem một đơn thật.
+\begin{console}{sqlcmd --- đơn 43659: phần đầu đơn và 12 dòng hàng}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t5_order.sql
+SalesOrderID OrderDate  CustomerID  Online Status SubTotal     TotalDue
+------------ ---------- ----------- ------ ------ ------------ ------------
+       43659 2011-05-31       29825      0      5     20565.62     23153.23
+
+(1 rows affected)
+LineID      ProductID   Qty    LineTotal    SanPham
+----------- ----------- ------ ------------ ------------------------------
+          1         776      1      2024.99 Mountain-100 Black, 42
+          2         777      3      6074.98 Mountain-100 Black, 44
+          3         778      1      2024.99 Mountain-100 Black, 48
+          4         771      1      2039.99 Mountain-100 Silver, 38
+          5         772      1      2039.99 Mountain-100 Silver, 42
+          6         773      2      4079.99 Mountain-100 Silver, 44
+          7         774      1      2039.99 Mountain-100 Silver, 48
+          8         714      3        86.52 Long-Sleeve Logo Jersey, M
+          9         716      1        28.84 Long-Sleeve Logo Jersey, XL
+         10         709      6        34.20 Mountain Bike Socks, M
+         11         712      2        10.37 AWC Logo Cap
+         12         711      4        80.75 Sport-100 Helmet, Blue
+
+(12 rows affected)
+\end{console}
+
+Đơn 43659 là đơn của một đại lý (\texttt{Online = 0}), gồm 12 dòng hàng: 7 dòng xe đạp Mountain-100 các cỡ, còn lại là áo, tất, mũ. Cộng \texttt{LineTotal} của 12 dòng được 20.565,6206 USD, đúng bằng \texttt{SubTotal} ở phần đầu đơn; từ đó lên 23.153,23 USD là do thuế và phí vận chuyển. Lưu ý cột \texttt{LineTotal} ở trên đã được làm tròn tới hai chữ số thập phân cho dễ đọc, nên cộng tay các giá trị hiển thị sẽ ra 20.565,60 --- lệch 0,02 USD so với giá trị đầy đủ. Kiểu \texttt{money} của SQL Server lưu bốn chữ số thập phân, và chính sai số làm tròn này là lý do truy vấn V01c đặt ngưỡng so sánh 0,01 USD thay vì đòi bằng nhau tuyệt đối.
+
+\qhead{7. Nhân khẩu học nằm trong một khối XML}
+Thông tin khảo sát khách hàng không được lưu thành cột mà gói trong một khối XML. Đặc điểm này chi phối mọi truy vấn nhân khẩu học của báo cáo: không thể đọc thẳng từ bảng, phải đi qua view để tách, và vì view gọi phương thức XML nên mỗi phiên chạy đều phải bật \texttt{QUOTED\_\allowbreak IDENTIFIER}.
+\begin{console}{sqlcmd --- khối XML gốc và view tách nó thành cột}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t6_xml.sql
+do_dai_xml
+--------------------
+                 604
+
+(1 rows affected)
+noi_dung_xml
+------------------------------------------------------------------------
+"><TotalPurchaseYTD>4751.05</TotalPurchaseYTD><DateFirstPurchase>2001-07
+-22Z</DateFirstPurchase><BirthDate>1966-04-08Z</BirthDate><MaritalStatus
+>M</MaritalStatus><YearlyIncome>75001-100000</YearlyIncome><Gender>M</Ge
+nder><TotalChildren>2</TotalChildren><NumberChildrenAtHome>0</NumberChil
+drenAtHome><Education>Bachelors </Education><Occupation>Professional</Oc
+cupation><HomeOwnerFlag>1</HomeOwnerFlag><NumberCarsOwned>0</NumberCarsO
+wned><CommuteDistance>1-2 Miles</CommuteDistance></IndividualSurvey>
+
+(7 rows affected)
+GioiTinh NgaySinh   HonNhan ThuNhap       NgheNghiep    SoCon SoXe
+-------- ---------- ------- ------------- ------------- ----- ----
+M        1966-04-08 M       75001-100000  Professional  2     0
+
+(1 rows affected)
+\end{console}
+
+Khối XML dài 604 ký tự chứa toàn bộ kết quả khảo sát của một người. Muốn dùng được, phải tách nó ra, và CompanyX đã làm sẵn việc đó bằng view \texttt{Sales.\allowbreak vPersonDemographics} --- kết quả là phần cuối khối trên, cùng một người, đã thành các cột truy vấn được. Vì view gọi phương thức XML nên mọi truy vấn chạm tới nó đều cần \texttt{SET QUOTED\_\allowbreak IDENTIFIER ON} --- dòng này nằm ở đầu tệp truy vấn nên không hiện trong khối trên, vì \texttt{sqlcmd} chỉ in kết quả chứ không in lại câu lệnh đầu vào.
+
+\qhead{8. Mười lãnh thổ bán hàng}
+\begin{console}{sqlcmd --- toàn bộ bảng Sales.SalesTerritory}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t7_terr.sql
+ID          LanhTho         Ma   KhuVuc         DoanhSoNam
+----------- --------------- ---- -------------- --------------
+          1 Northwest       US   North America      7887186.79
+          2 Northeast       US   North America      2402176.85
+          3 Central         US   North America      3072175.12
+          4 Southwest       US   North America     10510853.87
+          5 Southeast       US   North America      2538667.25
+          6 Canada          CA   North America      6771829.14
+          7 France          FR   Europe             4772398.31
+          8 Germany         DE   Europe             3805202.35
+          9 Australia       AU   Pacific            5977814.92
+         10 United Kingdom  GB   Europe             5012905.37
+
+(10 rows affected)
+\end{console}
+
+Bảng chỉ có 10 dòng nhưng quyết định cách chia thị trường trong suốt báo cáo: năm vùng của Mỹ, cộng Canada, ba nước châu Âu và Úc, gộp thành ba khu vực.
+
+\qhead{9. Cây phân loại sản phẩm}
+\begin{console}{sqlcmd --- bốn danh mục lớn, số danh mục con và khoảng giá}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t8_cat.sql
+DanhMucLon   SoDanhMucCon SoSanPham   GiaThapNhat GiaCaoNhat
+------------ ------------ ----------- ----------- -----------
+Components             14         134       20.24     1431.50
+Bikes                   3          97      539.99     3578.27
+Clothing                8          35        8.99       89.99
+Accessories            12          29        2.29      159.00
+
+(4 rows affected)
+\end{console}
+
+Bảng này giải thích nghịch lý ở Mục~\ref{sec:what}: xe đạp chỉ có 97 sản phẩm nhưng giá từ 540 đến 3.578 USD, trong khi phụ kiện có 29 sản phẩm giá từ 2,29 đến 159 USD. Ít mã hàng và giá cao là lý do xe đạp chiếm 86\% doanh thu dù ít khách mua hơn phụ kiện.
+
+\qhead{10. Lý do mua là quan hệ nhiều--nhiều}
+\begin{console}{sqlcmd --- bảng lý do mua và ví dụ đơn có ba lý do}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t9_reason.sql
+ID          LyDo                       Nhom
+----------- -------------------------- ------------
+          1 Price                      Other
+          2 On Promotion               Promotion
+          3 Magazine Advertisement     Marketing
+          4 Television  Advertisement  Marketing
+          5 Manufacturer               Other
+          6 Review                     Other
+          7 Demo Event                 Marketing
+          8 Sponsorship                Marketing
+          9 Quality                    Other
+         10 Other                      Other
+
+(10 rows affected)
+DonHang     LyDo
+----------- --------------------------
+      51214 On Promotion
+      51214 Other
+      51214 Price
+      51298 On Promotion
+      51298 Other
+      51298 Price
+
+(6 rows affected)
+\end{console}
+
+Bảng gốc chỉ có 10 lý do. Khối thứ hai cho thấy vì sao không được cộng gộp: đơn 51214 và 51298 mỗi đơn gắn ba lý do, nên khi nối bảng đơn hàng với bảng cầu thì một đơn bị nhân thành ba dòng. Đó là lý do Bảng~\ref{tab:reason} đếm riêng số đơn thay vì số dòng.
+
+\qhead{11. Vùng dữ liệu hỏng}
+Mười khối trên cho thấy kho dữ liệu được tổ chức tốt. Khối này cho thấy mặt còn lại. Bắt đầu từ chính khai báo của cơ sở dữ liệu: trong 89 ràng buộc kiểm tra, có 8 ràng buộc đang bị tắt.
+\begin{console}{sqlcmd --- tám ràng buộc CHECK đang bị tắt}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t11_check.sql
+bang              rang_buoc                      dieu_kien
+----------------- ------------------------------ ------------------------
+SalesOrderDetail  CK_SalesOrderDetail_OrderQty   ([OrderQty]>(0))
+SalesOrderDetail  CK_SalesOrderDetail_UnitPrice  ([UnitPrice]>=(0.00))
+SalesOrderHeader  CK_SalesOrderHeader_DueDate    ([DueDate]>=[OrderDate])
+SalesOrderHeader  CK_SalesOrderHeader_ShipDate   ([ShipDate]>=[OrderDate]
+SalesOrderHeader  CK_SalesOrderHeader_SubTotal   ([SubTotal]>=(0.00))
+SpecialOffer      CK_SpecialOffer_DiscountPct    ([DiscountPct]>=(0.00))
+SpecialOffer      CK_SpecialOffer_EndDate        ([EndDate]>=[StartDate])
+SpecialOffer      CK_SpecialOffer_MaxQty         ([MaxQty]>=(0))
+
+(8 rows affected)
+\end{console}
+
+Mỗi dòng ở đây là một điều kiện mà cơ sở dữ liệu \emph{lẽ ra} phải bảo đảm nhưng hiện không còn bảo đảm nữa. Danh sách này đóng vai trò như một bản đồ: nó chỉ ra chính xác nên đi tìm dữ liệu sai ở đâu. Lần theo hai ràng buộc đầu tiên thì thấy vùng hỏng.
+\begin{console}{sqlcmd --- sáu đơn hỏng, mỗi đơn một kiểu lỗi}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t12_broken.sql
+don         so_dong_hong kieu_hong         loi_ngay
+----------- ------------ ----------------- ------------------------
+      43677           12 UnitPrice = 0
+      43678           19 UnitPrice am
+      43679            3 UnitPrice = NULL
+      43680           15 OrderQty = NULL   ShipDate truoc OrderDate
+      43681           21 OrderQty = 0      ShipDate truoc OrderDate
+      43682            5 OrderQty am
+
+(6 rows affected)
+\end{console}
+
+Sáu đơn liên tiếp, 75 dòng sản phẩm, và mỗi đơn mang đúng một kiểu lỗi khác nhau: đơn giá bằng 0, âm, rỗng; số lượng rỗng, bằng 0, âm. Một lỗi nhập liệu ngẫu nhiên không bao giờ sắp xếp ngăn nắp như vậy. Hai đơn 43680 và 43681 còn có ngày giao nằm trước ngày đặt gần một năm, ứng với hai ràng buộc \texttt{DueDate} và \texttt{ShipDate} cũng đang bị tắt.
+
+Vùng hỏng này không bị các phép kiểm tra cộng trừ bắt được: truy vấn V01c trả về 0 đơn sai và phép cộng \texttt{TotalDue} khớp trên cả 31.465 đơn, vì dữ liệu hỏng được đưa vào một cách nhất quán về số học. Mục~\ref{sec:overview} phân tích cơ chế này qua đơn 43677.
+
+Vùng hỏng thứ hai nằm ở bảng chương trình khuyến mãi.
+\begin{console}{sqlcmd --- ba dòng hỏng trong bảng khuyến mãi}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/t13_offer.sql
+ID          mo_ta                    bat_dau    ket_thuc   sl_min      sl_max
+----------- ------------------------ ---------- ---------- ----------- -----------
+          3 Volume Discount 15 to 24 2011-05-31 2014-05-30          15         -24
+         15 Half-Price Pedal Sale    2013-07-14 2012-08-14           0        NULL
+         16 Mountain-500 Silver Clea 2014-03-31 2013-05-30           0        NULL
+
+(3 rows affected)
+\end{console}
+
+Chương trình 3 tên là ``Volume Discount 15 to 24'' nhưng số lượng tối đa ghi $-24$. Chương trình 15 và 16 có ngày kết thúc nằm trước ngày bắt đầu. Riêng chương trình 16 kéo theo hậu quả sang dữ liệu bán hàng: 169 dòng hàng của mẫu xe Mountain-500 Silver, trị giá 25.899 USD ở kênh đại lý, được áp mức giảm 40\% vào thời điểm mà theo đúng bảng này, chương trình còn chưa bắt đầu.
+
+Bài học rút ra cho phần sau: khi nhận một kho dữ liệu, nên đọc trạng thái ràng buộc trước khi đọc dữ liệu. Ràng buộc bị tắt là chỉ dấu rẻ và nhanh hơn nhiều so với việc dò tìm bất thường bằng thống kê mô tả, và trong trường hợp này nó dẫn thẳng tới toàn bộ vùng hỏng.
+
+% ---------------------------------------------------------------
+\subsection{V01 --- Doanh thu và tính nhất quán giữa hai cấp dữ liệu}
+
+Mục đích: xác nhận tổng doanh thu, và kiểm tra bảng đơn hàng có khớp với bảng dòng hàng hay không.
+
+\begin{lstlisting}
+-- V01a: thanh phan doanh thu cap don
+SELECT COUNT(*) AS orders,
+       CAST(SUM(SubTotal) AS decimal(18,2)) AS subtotal,
+       CAST(SUM(TaxAmt)   AS decimal(18,2)) AS tax,
+       CAST(SUM(Freight)  AS decimal(18,2)) AS freight,
+       CAST(SUM(TotalDue) AS decimal(18,2)) AS totaldue
+FROM Sales.SalesOrderHeader;
+
+-- V01c: so don co SubTotal khac tong LineTotal (phai bang 0)
+SELECT COUNT(*) AS mismatched_orders FROM (
+  SELECT h.SalesOrderID
+  FROM Sales.SalesOrderHeader h
+  JOIN Sales.SalesOrderDetail d ON d.SalesOrderID = h.SalesOrderID
+  GROUP BY h.SalesOrderID, h.SubTotal
+  HAVING ABS(h.SubTotal - SUM(d.LineTotal)) > 0.01) x;
+\end{lstlisting}
+
+\qhead{Kết quả}
+\begin{center}\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Chỉ tiêu} & \textbf{Số đơn} & \textbf{Trước thuế} & \textbf{Thuế} & \textbf{Tổng phải trả} \\
+\midrule
+V01a --- cấp đơn & 31.465 & 109.784.735,90 & 10.186.974,46 & 123.155.140,61 \\
+V01b --- cấp dòng hàng & 121.317 dòng & 109.784.735,89 & --- & --- \\
+V01c --- đơn lệch $>$ 0,01 USD & \multicolumn{4}{l}{\textbf{0}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Hai cấp dữ liệu lệch nhau đúng 0,01 USD trên tổng 109,8 triệu, là sai số làm tròn của kiểu \texttt{money}, và không có đơn nào lệch quá một xu. Phí vận chuyển 3.183.430,25 USD cộng nốt vào để ra 123.155.140,61 USD.
+
+\qhead{V01d --- doanh thu và độ phủ khách theo danh mục}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Danh mục} & \textbf{Số khách} & \textbf{Số lượng} & \textbf{Doanh thu dòng hàng (USD)} \\
+\midrule
+Bikes (Xe đạp) & 9.719 & 90.221 & 94.597.297,06 \\
+Components (Linh kiện) & 580 & 49.032 & 11.796.253,20 \\
+Clothing (Quần áo) & 7.327 & 73.651 & 2.119.738,53 \\
+Accessories (Phụ kiện) & 15.461 & 61.920 & 1.271.447,10 \\
+\midrule
+Dòng không có danh mục & \multicolumn{3}{l}{\textbf{0}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Không dòng hàng nào thiếu danh mục, nên phép cộng theo danh mục phủ đúng 100\% doanh thu. Đây là căn cứ cho Hình~\ref{fig:category}.
+
+% ---------------------------------------------------------------
+\subsection{V02 --- Chất lượng dữ liệu}
+
+\begin{lstlisting}
+-- V02b: don co tong tien am
+SELECT SalesOrderID, CustomerID, OrderDate, Status, OnlineOrderFlag,
+       CAST(TotalDue AS decimal(18,2)) AS totaldue,
+       (SELECT COUNT(*) FROM Sales.SalesOrderDetail d
+        WHERE d.SalesOrderID = h.SalesOrderID) AS n_lines
+FROM Sales.SalesOrderHeader h WHERE TotalDue < 0 OR SubTotal < 0;
+
+-- V02c: ba nhom ban ghi trong Sales.Customer
+SELECT grp, COUNT(*) AS customers, SUM(has_order) AS with_orders FROM (
+  SELECT CASE WHEN PersonID IS NULL THEN 'PersonID NULL'
+              WHEN StoreID  IS NULL THEN 'Individual'
+              ELSE 'Store contact' END AS grp,
+         CASE WHEN EXISTS (SELECT 1 FROM Sales.SalesOrderHeader h
+                           WHERE h.CustomerID = c.CustomerID) THEN 1 ELSE 0 END AS has_order
+  FROM Sales.Customer c) x GROUP BY grp;
+
+-- V02d: kiem tra trung khoa va tinh toan ven khoa ngoai
+SELECT (SELECT COUNT(*) - COUNT(DISTINCT CustomerID)       FROM Sales.Customer)          AS dup_customer,
+       (SELECT COUNT(*) - COUNT(DISTINCT SalesOrderID)     FROM Sales.SalesOrderHeader)  AS dup_order,
+       (SELECT COUNT(*) - COUNT(DISTINCT SalesOrderDetailID) FROM Sales.SalesOrderDetail) AS dup_line,
+       (SELECT COUNT(*) FROM sys.foreign_keys)                     AS fk_count,
+       (SELECT COUNT(*) FROM sys.foreign_keys WHERE is_not_trusted=1) AS fk_untrusted;
+\end{lstlisting}
+
+\qhead{Kết quả}
+\begin{center}\footnotesize
+\begin{tabular}{llr}
+\toprule
+\rowcolor{tblhead} \textbf{Mã} & \textbf{Nội dung kiểm tra} & \textbf{Kết quả} \\
+\midrule
+V02a & Đơn trạng thái 5 (đã giao) & 31.150 đơn / 121.978.690,44 USD \\
+V02a & Đơn trạng thái 6 (đã hủy) & 315 đơn / 1.176.450,17 USD \\
+V02b & Đơn 43678 (31/05/2011, đại lý, trạng thái 5) & $-8.563,45$ USD, 19 dòng \\
+V02b & Đơn 43682 (31/05/2011, đại lý, trạng thái 5) & $-3.387,74$ USD, 5 dòng \\
+V02c & Khách cá nhân (có đơn) & 18.484 / 18.484 \\
+V02c & Liên hệ của đại lý (có đơn) & 635 / 635 \\
+V02c & \texttt{PersonID} rỗng (có đơn) & 701 / \textbf{0} \\
+V02d & Trùng khóa chính: \texttt{CustomerID} / \texttt{SalesOrderID} & 0 / 0 \\
+V02d & Trùng khóa chính: \texttt{SalesOrderDetailID} & 0 \\
+V02d & Khóa ngoại: tổng số / số không đáng tin & 90 / \textbf{0} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Cả 90 khóa ngoại đều ở trạng thái đáng tin (\texttt{is\_not\_trusted = 0}), nghĩa là SQL Server đã kiểm chứng toàn bộ dữ liệu hiện có thỏa mãn ràng buộc, chứ không chỉ khai báo suông. Đây là căn cứ cho khẳng định ``toàn bộ 90 mối liên kết còn nguyên vẹn'' ở Mục~\ref{sec:overview}.
+
+\qhead{V02e --- quy mô trước và sau khi lọc}
+\begin{center}\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Tập} & \textbf{Khách} & \textbf{Đơn} & \textbf{Dòng hàng} & \textbf{Tổng phải trả (USD)} \\
+\midrule
+Trước lọc & 19.119 & 31.465 & 121.317 & 123.155.140,61 \\
+Sau lọc (bỏ 315 đơn hủy và 6 đơn hỏng) & 18.995 & 31.144 & 120.072 & 121.986.324,02 \\
+\midrule
+Chênh lệch & $-124$ & $-321$ & $-1.245$ & $-1.168.816,59$ (0,95\%) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ---------------------------------------------------------------
+\subsection{V03 --- Kênh bán và mức tập trung doanh thu}
+
+\begin{lstlisting}
+-- V03: hai nhom khach hang
+SELECT CASE WHEN c.StoreID IS NULL THEN 'Individual' ELSE 'Store' END AS ctype,
+       COUNT(DISTINCT h.CustomerID) AS customers, COUNT(*) AS orders,
+       CAST(SUM(h.TotalDue) AS decimal(18,2)) AS totaldue,
+       CAST(AVG(h.TotalDue) AS decimal(18,2)) AS avg_per_order,
+       CAST(SUM(h.TotalDue)/COUNT(DISTINCT h.CustomerID) AS decimal(18,2)) AS avg_per_customer,
+       CAST(COUNT(*)*1.0/COUNT(DISTINCT h.CustomerID)   AS decimal(10,2)) AS orders_per_customer
+FROM Sales.SalesOrderHeader h
+JOIN Sales.Customer c ON c.CustomerID = h.CustomerID
+GROUP BY CASE WHEN c.StoreID IS NULL THEN 'Individual' ELSE 'Store' END;
+
+-- V03c: Pareto - chia khach thanh 5 phan bang nhau theo tong chi tieu
+WITH s AS (SELECT CustomerID, SUM(TotalDue) AS spend
+           FROM Sales.SalesOrderHeader GROUP BY CustomerID),
+     r AS (SELECT spend, NTILE(5) OVER (ORDER BY spend DESC) AS q FROM s)
+SELECT q, COUNT(*) AS customers, CAST(SUM(spend) AS decimal(18,2)) AS revenue,
+       CAST(100.0*SUM(spend)/(SELECT SUM(spend) FROM s) AS decimal(5,1)) AS pct
+FROM r GROUP BY q ORDER BY q;
+\end{lstlisting}
+
+\qhead{Kết quả V03}
+\begin{center}\footnotesize
+\begin{tabular}{lrrrrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Nhóm} & \textbf{Khách} & \textbf{Đơn} & \textbf{Doanh thu (USD)} & \textbf{TB/đơn} & \textbf{TB/khách} & \textbf{Đơn/khách} \\
+\midrule
+Cá nhân & 18.484 & 27.659 & 32.441.339,12 & 1.172,90 & 1.755,10 & 1,50 \\
+Đại lý & 635 & 3.806 & 90.713.801,49 & 23.834,42 & 142.856,38 & 5,99 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\qhead{Kết quả V03c --- ngũ phân vị theo chi tiêu}
+\begin{center}\footnotesize
+\begin{tabular}{crrr}
+\toprule
+\rowcolor{tblhead} \textbf{Nhóm} & \textbf{Số khách} & \textbf{Doanh thu (USD)} & \textbf{Tỷ trọng} \\
+\midrule
+1 (chi nhiều nhất) & 3.824 & 110.529.926,50 & 89,7\% \\
+2 & 3.824 & 10.110.245,12 & 8,2\% \\
+3 & 3.824 & 2.138.622,53 & 1,7\% \\
+4 & 3.824 & 280.984,88 & 0,2\% \\
+5 (chi ít nhất) & 3.823 & 95.361,58 & 0,1\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+V03b xác nhận \texttt{OnlineOrderFlag} trùng khít với loại khách: toàn bộ 27.659 đơn của khách cá nhân đều có cờ online bằng 1, toàn bộ 3.806 đơn của đại lý đều bằng 0. Vì vậy báo cáo dùng hai cách gọi ``kênh online'' và ``khách cá nhân'' thay thế nhau được.
+
+% ---------------------------------------------------------------
+\subsection{V04 --- Gắn nhãn rời bỏ}
+
+Đây là nhóm truy vấn quan trọng nhất của báo cáo. V04a trả lời câu hỏi kho dữ liệu có sẵn nhãn hay không; V04b định nghĩa nhãn chính thức; V04c--V04e là các phương án thay thế dùng để đối chiếu.
+
+\begin{lstlisting}
+-- V04a: tim cot nhan churn co san trong toan bo CSDL
+SELECT OBJECT_SCHEMA_NAME(c.object_id) + '.' + OBJECT_NAME(c.object_id) AS tbl, c.name
+FROM sys.columns c WHERE c.name LIKE '%churn%' OR c.name LIKE '%active%';
+
+-- V04b: NHAN CHINH THUC
+--   Du dieu kien : don dau tien <= 2013-06-30 (co it nhat 12 thang de the hien)
+--   Churn        : khong co don nao trong 2013-07-01 .. 2014-06-30
+WITH agg AS (SELECT CustomerID, MIN(OrderDate) AS first_dt
+             FROM Sales.SalesOrderHeader GROUP BY CustomerID),
+     post AS (SELECT DISTINCT CustomerID FROM Sales.SalesOrderHeader
+              WHERE OrderDate >= '2013-07-01' AND OrderDate <= '2014-06-30')
+SELECT COUNT(*) AS eligible,
+       SUM(CASE WHEN post.CustomerID IS NULL     THEN 1 ELSE 0 END) AS churn,
+       SUM(CASE WHEN post.CustomerID IS NOT NULL THEN 1 ELSE 0 END) AS active
+FROM agg LEFT JOIN post ON post.CustomerID = agg.CustomerID
+WHERE agg.first_dt <= '2013-06-30';
+
+-- V04e: cach dem nguoc tu ngay cuoi du lieu (KHONG co dieu kien du thoi gian)
+WITH lastord AS (SELECT CustomerID, MAX(OrderDate) AS last_dt
+                 FROM Sales.SalesOrderHeader GROUP BY CustomerID)
+SELECT SUM(CASE WHEN DATEDIFF(day,last_dt,'2014-06-30') > 180 THEN 1 ELSE 0 END) AS silent_6m,
+       SUM(CASE WHEN DATEDIFF(day,last_dt,'2014-06-30') > 365 THEN 1 ELSE 0 END) AS silent_12m,
+       COUNT(*) AS total
+FROM lastord;
+\end{lstlisting}
+
+\qhead{Kết quả --- so sánh các cách gắn nhãn}
+\begin{center}\footnotesize
+\begin{tabular}{llrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Mã} & \textbf{Cách gắn nhãn} & \textbf{Mẫu số} & \textbf{Rời bỏ} & \textbf{Tỷ lệ} \\
+\midrule
+V04b & \textbf{Chính thức}: mốc 30/06/2013, kỳ kiểm tra 12 tháng & 6.206 & 1.050 & \textbf{16,9\%} \\
+V04c & Như trên, chỉ tính đơn trạng thái 5 và không âm & 6.148 & 1.080 & 17,6\% \\
+V04d & Mốc 31/12/2013, kỳ kiểm tra 6 tháng & 13.097 & 8.765 & 66,9\% \\
+V04e & Im lặng $>$ 6 tháng tính từ 30/06/2014, không lọc mẫu & 19.119 & 8.765 & 45,8\% \\
+V04e & Im lặng $>$ 12 tháng tính từ 30/06/2014, không lọc mẫu & 19.119 & 1.016 & 5,3\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{console}{sqlcmd --- V04b, nhãn rời bỏ chính thức}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/b_v04b.sql
+du_dieu_kien roi_bo      o_lai       ty_le
+------------ ----------- ----------- -------
+        6206        1050        5156    16.9
+
+(1 rows affected)
+\end{console}
+
+
+V04a chỉ tìm thấy một cột duy nhất khớp mẫu tên, là \texttt{Purchasing.\allowbreak Vendor.\allowbreak ActiveFlag} --- cột trạng thái của nhà cung cấp, không liên quan đến khách hàng. Kho dữ liệu vì vậy không có nhãn rời bỏ sẵn, đúng như Mục~\ref{sec:label} đã nêu.
+
+Ba dòng cuối bảng cho thấy vì sao phải có điều kiện đủ thời gian quan sát. Hai dòng V04e dùng chung mẫu số 19.119 khách, trong đó hàng nghìn người mới mua lần đầu vài tháng trước khi dữ liệu kết thúc; đổi ngưỡng từ 6 lên 12 tháng làm tỷ lệ rơi từ 45,8\% xuống 5,3\%, một biên độ cho thấy con số phụ thuộc vào ngưỡng nhiều hơn là vào hành vi khách hàng.
+
+\qhead{V04f --- rời bỏ theo lãnh thổ và loại khách (nhãn V04b)}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr@{\hskip 22pt}lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Lãnh thổ} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} & \textbf{Lãnh thổ} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} \\
+\midrule
+Canada & 191 & 453 & 42,2\% & France & 86 & 542 & 15,9\% \\
+Southeast & 27 & 71 & 38,0\% & Germany & 60 & 553 & 10,8\% \\
+Central & 22 & 59 & 37,3\% & United Kingdom & 56 & 628 & 8,9\% \\
+Northwest & 210 & 774 & 27,1\% & Australia & 78 & 1.933 & 4,0\% \\
+Southwest & 308 & 1.148 & 26,8\% & \textit{Đại lý} & \textit{153} & \textit{535} & \textit{28,6\%} \\
+Northeast & 12 & 45 & 26,7\% & \textit{Cá nhân} & \textit{897} & \textit{5.671} & \textit{15,8\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\qhead{V04g --- mô tả hồi cứu hai nhóm nhãn}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Nhãn} & \textbf{Số khách} & \textbf{Số đơn TB} & \textbf{Số ngày từ đơn đầu đến đơn cuối} \\
+\midrule
+Ở lại & 5.156 & 2,62 & 547,1 \\
+Rời bỏ & 1.050 & 1,61 & 104,2 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Hai cột bên phải tính trên \emph{toàn bộ} lịch sử mua, kể cả kỳ kiểm tra, nên chúng chứa sẵn kết quả cần dự báo. Chúng chỉ dùng để mô tả hai nhóm sau khi đã biết nhãn, tuyệt đối không được đưa vào mô hình dự báo.
+
+
+% ---------------------------------------------------------------
+\subsection{V05 --- Số lần mua trước mốc}
+
+Đây là truy vấn đã sửa lỗi rò rỉ dữ liệu mô tả ở Mục~\ref{sec:freq-churn}. Điểm mấu chốt nằm ở mệnh đề \texttt{WHERE OrderDate <= '2013-06-30'} trong CTE \texttt{pre}: số lần mua chỉ được đếm trong giai đoạn theo dõi, tách hẳn khỏi kỳ kiểm tra dùng để gắn nhãn.
+
+\begin{lstlisting}
+-- V05a: so lan mua TRUOC MOC x nhan roi bo (khong ro ri)
+WITH pre AS (
+  SELECT h.CustomerID, COUNT(*) AS n_pre,
+         CASE WHEN c.StoreID IS NULL THEN 'Individual' ELSE 'Store' END AS ctype
+  FROM Sales.SalesOrderHeader h
+  JOIN Sales.Customer c ON c.CustomerID = h.CustomerID
+  WHERE OrderDate <= '2013-06-30'                 -- <-- chi giai doan theo doi
+  GROUP BY h.CustomerID, CASE WHEN c.StoreID IS NULL THEN 'Individual' ELSE 'Store' END),
+     post AS (
+  SELECT DISTINCT CustomerID FROM Sales.SalesOrderHeader
+  WHERE OrderDate >= '2013-07-01' AND OrderDate <= '2014-06-30')
+SELECT ctype,
+       CASE WHEN n_pre = 1 THEN '1' WHEN n_pre = 2 THEN '2'
+            WHEN n_pre <= 5 THEN '3-5' ELSE '6+' END AS bucket,
+       SUM(CASE WHEN post.CustomerID IS NULL THEN 1 ELSE 0 END) AS churn,
+       COUNT(*) AS total
+FROM pre LEFT JOIN post ON post.CustomerID = pre.CustomerID
+GROUP BY ctype, CASE WHEN n_pre = 1 THEN '1' WHEN n_pre = 2 THEN '2'
+                     WHEN n_pre <= 5 THEN '3-5' ELSE '6+' END
+ORDER BY ctype, bucket;
+
+-- V05b: CACH TINH CU, BI RO RI - dem so lan mua tren TOAN BO du lieu.
+--       Giu lai de doi chieu, KHONG dung cho ket luan.
+WITH agg AS (SELECT CustomerID, MIN(OrderDate) AS first_dt, COUNT(*) AS n
+             FROM Sales.SalesOrderHeader GROUP BY CustomerID),
+     post AS (SELECT DISTINCT CustomerID FROM Sales.SalesOrderHeader
+              WHERE OrderDate >= '2013-07-01' AND OrderDate <= '2014-06-30')
+SELECT CASE WHEN n = 1 THEN '1' WHEN n = 2 THEN '2'
+            WHEN n <= 5 THEN '3-5' ELSE '6+' END AS bucket,
+       SUM(CASE WHEN post.CustomerID IS NULL THEN 1 ELSE 0 END) AS churn, COUNT(*) AS total
+FROM agg LEFT JOIN post ON post.CustomerID = agg.CustomerID
+WHERE first_dt <= '2013-06-30'
+GROUP BY CASE WHEN n = 1 THEN '1' WHEN n = 2 THEN '2'
+              WHEN n <= 5 THEN '3-5' ELSE '6+' END ORDER BY bucket;
+\end{lstlisting}
+
+\qhead{Kết quả V05a (đúng) so với V05b (rò rỉ)}
+\begin{center}\footnotesize
+\begin{tabular}{llrrr@{\hskip 20pt}rrr}
+\toprule
+\rowcolor{tblhead} & & \multicolumn{3}{c}{\textbf{V05a --- đếm trước mốc}} & \multicolumn{3}{c}{\textbf{V05b --- đếm toàn bộ}} \\
+\rowcolor{tblhead} \textbf{Nhóm} & \textbf{Số lần} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} \\
+\midrule
+Cá nhân & 1 & 719 & 5.357 & 13,4\% & \multirow{2}{*}{740} & \multirow{2}{*}{740} & \multirow{2}{*}{100\%} \\
+Cá nhân & 2 & 178 & 311 & 57,2\% & & & \\
+Cá nhân & 3--5 & 0 & 3 & 0,0\% & 191 & 4.004 & 4,8\% \\
+Đại lý & 1--2 & 34 & 147 & 23,1\% & 91 & 1.160 & 7,8\% \\
+Đại lý & 3--5 & 91 & 266 & 34,2\% & \multirow{2}{*}{28} & \multirow{2}{*}{302} & \multirow{2}{*}{9,3\%} \\
+Đại lý & 6+ & 28 & 122 & 23,0\% & & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{2pt}
+{\footnotesize\textit{Ghi chú: hai khối cột chia nhóm theo cách khác nhau nên không xếp thẳng hàng từng dòng; bảng chỉ nhằm cho thấy độ lệch về chiều hướng. Ở V05b, mọi khách có đúng một đơn trong toàn bộ dữ liệu đều tất yếu bị gắn nhãn rời bỏ (740/740 = 100\%), vì nếu họ có mua trong kỳ kiểm tra thì số đơn đã không thể bằng 1. Đó chính là biểu hiện của rò rỉ: biến đặc trưng đã chứa sẵn câu trả lời.}}
+
+\begin{console}{sqlcmd --- V05a, số lần mua trước mốc}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/c_v05a.sql
+loai    so_lan roi_bo      tong
+------- ------ ----------- -----------
+Ca nhan 1              719        5357
+Ca nhan 2              178         311
+Ca nhan 3-5              0           3
+Dai ly  1               21         121
+Dai ly  2               13          26
+Dai ly  3-5             91         266
+Dai ly  6+              28         122
+
+(7 rows affected)
+\end{console}
+
+
+\qhead{V05c --- theo nhóm khách gia nhập (khách cá nhân)}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr@{\hskip 20pt}rrr}
+\toprule
+\rowcolor{tblhead} & \multicolumn{3}{c}{\textbf{Mua 1 lần trước mốc}} & \multicolumn{3}{c}{\textbf{Mua 2 lần trở lên}} \\
+\rowcolor{tblhead} \textbf{Năm mua lần đầu} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} \\
+\midrule
+2011 & 204 & 1.071 & 19,0\% & 53 & 130 & 40,8\% \\
+2012 & 176 & 2.622 & 6,7\% & 85 & 121 & 70,2\% \\
+Nửa đầu 2013 & 339 & 1.664 & 20,4\% & 40 & 63 & 63,5\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ---------------------------------------------------------------
+\subsection{V06 --- Danh mục sản phẩm đã mua trước mốc}
+
+\begin{lstlisting}
+-- V06b: hai nhom loai tru nhau, khach ca nhan du dieu kien
+WITH pre AS (
+  SELECT DISTINCT h.CustomerID FROM Sales.SalesOrderHeader h
+  JOIN Sales.Customer c ON c.CustomerID = h.CustomerID
+  WHERE OrderDate <= '2013-06-30' AND c.StoreID IS NULL),
+     post AS (
+  SELECT DISTINCT CustomerID FROM Sales.SalesOrderHeader
+  WHERE OrderDate >= '2013-07-01' AND OrderDate <= '2014-06-30'),
+     cat AS (
+  SELECT h.CustomerID,
+         MAX(CASE WHEN pc.Name IN ('Accessories','Clothing') THEN 1 ELSE 0 END) AS has_acc
+  FROM Sales.SalesOrderDetail d
+  JOIN Sales.SalesOrderHeader h      ON h.SalesOrderID = d.SalesOrderID
+  JOIN Production.Product p          ON p.ProductID = d.ProductID
+  JOIN Production.ProductSubcategory ps ON ps.ProductSubcategoryID = p.ProductSubcategoryID
+  JOIN Production.ProductCategory pc ON pc.ProductCategoryID = ps.ProductCategoryID
+  WHERE h.OrderDate <= '2013-06-30'               -- <-- lai la giai doan theo doi
+  GROUP BY h.CustomerID)
+SELECT CASE WHEN has_acc = 1 THEN 'Co phu kien/quan ao'
+            ELSE 'Chi xe dap hoac linh kien' END AS grp,
+       SUM(CASE WHEN post.CustomerID IS NULL THEN 1 ELSE 0 END) AS churn, COUNT(*) AS total
+FROM pre JOIN cat ON cat.CustomerID = pre.CustomerID
+LEFT JOIN post ON post.CustomerID = pre.CustomerID
+GROUP BY has_acc;
+\end{lstlisting}
+
+\qhead{Kết quả V06a, V06b, V06c}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Nhóm khách cá nhân đủ điều kiện} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} \\
+\midrule
+\multicolumn{4}{l}{\textit{V06a --- theo danh mục, một khách có thể thuộc nhiều dòng}} \\
+Đã mua xe đạp trước mốc & 879 & 5.636 & 15,6\% \\
+Đã mua phụ kiện trước mốc & 290 & 428 & 67,8\% \\
+Đã mua quần áo trước mốc & 124 & 166 & 74,7\% \\
+\midrule
+\multicolumn{4}{l}{\textit{V06b --- hai nhóm loại trừ nhau}} \\
+Chỉ mua xe đạp hoặc linh kiện & 556 & 5.184 & 10,7\% \\
+Có mua phụ kiện hoặc quần áo & 341 & 487 & 70,0\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\qhead{V06c --- mức trùng lắp giữa hai dấu hiệu (số khách)}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Số lần mua trước mốc} & \textbf{Không mua phụ kiện} & \textbf{Có mua phụ kiện} & \textbf{Tổng} \\
+\midrule
+1 lần & 5.142 & 215 & 5.357 \\
+2 lần trở lên & 42 & 272 & 314 \\
+\midrule
+\textbf{Tổng} & \textbf{5.184} & \textbf{487} & \textbf{5.671} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Bảng này giải thích vì sao hai dấu hiệu xếp hạng 1 và 2 ở Bảng~\ref{tab:factor-rank} không độc lập: trong 314 khách mua từ hai lần trở lên trước mốc thì 272 người (87\%) cũng đã mua phụ kiện hoặc quần áo. Hai cột của Bảng~\ref{tab:churn-cat} và Bảng~\ref{tab:churn-freq} vì vậy mô tả gần như cùng một nhóm khách.
+
+% ---------------------------------------------------------------
+\subsection{V07 --- Nhân khẩu học và tỷ lệ rời bỏ}
+
+Truy vấn gốc ghép 10 chiều nhân khẩu học bằng \texttt{UNION ALL}. Dưới đây in một chiều đại diện; chín chiều còn lại (nghề nghiệp, số xe, số con, sở hữu nhà, học vấn, tuổi, giới tính, hôn nhân, đăng ký email) lặp lại đúng khuôn mẫu này, chỉ thay biểu thức gộp nhóm.
+
+\begin{lstlisting}
+WITH agg AS (SELECT CustomerID, MIN(OrderDate) AS first_dt
+             FROM Sales.SalesOrderHeader GROUP BY CustomerID),
+     post AS (SELECT DISTINCT CustomerID FROM Sales.SalesOrderHeader
+              WHERE OrderDate >= '2013-07-01' AND OrderDate <= '2014-06-30'),
+     lab AS (
+  SELECT c.PersonID, CASE WHEN post.CustomerID IS NULL THEN 1 ELSE 0 END AS churn
+  FROM agg
+  JOIN Sales.Customer c ON c.CustomerID = agg.CustomerID
+  LEFT JOIN post        ON post.CustomerID = agg.CustomerID
+  WHERE first_dt <= '2013-06-30' AND c.StoreID IS NULL)   -- chi khach ca nhan
+SELECT 'Income' AS dim, d.YearlyIncome AS val,
+       SUM(churn) AS churn, COUNT(*) AS total,
+       CAST(100.0*SUM(churn)/COUNT(*) AS decimal(5,1)) AS pct
+FROM lab JOIN Sales.vPersonDemographics d ON d.BusinessEntityID = lab.PersonID
+GROUP BY d.YearlyIncome
+-- UNION ALL ... lap lai cho Occupation, Cars, Children, HomeOwner,
+--                Education, Age, Gender, Marital, EmailPromotion
+ORDER BY dim, val;
+\end{lstlisting}
+
+\qhead{Kết quả đầy đủ V07a (5.671 khách cá nhân đủ điều kiện)}
+\begin{center}\footnotesize
+\begin{longtable}{llrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Chiều} & \textbf{Giá trị} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} \\
+\midrule
+\endfirsthead
+\toprule
+\rowcolor{tblhead} \textbf{Chiều} & \textbf{Giá trị} & \textbf{Rời bỏ} & \textbf{Tổng} & \textbf{Tỷ lệ} \\
+\midrule
+\endhead
+\midrule \multicolumn{5}{r}{\textit{(tiếp trang sau)}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+Thu nhập & 0--25.000 & 82 & 805 & 10,2\% \\
+Thu nhập & 25.001--50.000 & 390 & 1.681 & 23,2\% \\
+Thu nhập & 50.001--75.000 & 332 & 1.624 & 20,4\% \\
+Thu nhập & 75.001--100.000 & 55 & 931 & 5,9\% \\
+Thu nhập & trên 100.000 & 38 & 630 & 6,0\% \\
+\midrule
+Nghề nghiệp & Skilled Manual & 339 & 1.308 & 25,9\% \\
+Nghề nghiệp & Clerical & 171 & 1.027 & 16,7\% \\
+Nghề nghiệp & Professional & 231 & 1.743 & 13,3\% \\
+Nghề nghiệp & Manual & 78 & 641 & 12,2\% \\
+Nghề nghiệp & Management & 78 & 952 & 8,2\% \\
+\midrule
+Số xe hơi & 0 & 274 & 1.568 & 17,5\% \\
+Số xe hơi & 1 & 308 & 1.624 & 19,0\% \\
+Số xe hơi & 2 & 243 & 1.616 & 15,0\% \\
+Số xe hơi & 3 & 52 & 498 & 10,4\% \\
+Số xe hơi & 4 & 20 & 365 & 5,5\% \\
+\midrule
+Số con & 0 & 221 & 1.721 & 12,8\% \\
+Số con & 1 & 278 & 1.305 & 21,3\% \\
+Số con & 2 & 204 & 1.266 & 16,1\% \\
+Số con & 3 & 89 & 628 & 14,2\% \\
+Số con & 4 & 71 & 486 & 14,6\% \\
+Số con & 5 & 34 & 265 & 12,8\% \\
+\midrule
+Sở hữu nhà & Không & 347 & 1.769 & 19,6\% \\
+Sở hữu nhà & Có & 550 & 3.902 & 14,1\% \\
+\midrule
+Học vấn & Partial High School & 62 & 342 & 18,1\% \\
+Học vấn & High School & 165 & 903 & 18,3\% \\
+Học vấn & Partial College & 278 & 1.558 & 17,8\% \\
+Học vấn & Bachelors & 217 & 1.883 & 11,5\% \\
+Học vấn & Graduate Degree & 175 & 985 & 17,8\% \\
+\midrule
+Tuổi tại 30/06/2013 & dưới 40 & 111 & 766 & 14,5\% \\
+Tuổi tại 30/06/2013 & 40--49 & 355 & 2.160 & 16,4\% \\
+Tuổi tại 30/06/2013 & 50--59 & 284 & 1.710 & 16,6\% \\
+Tuổi tại 30/06/2013 & 60+ & 147 & 1.035 & 14,2\% \\
+\midrule
+Giới tính & Nữ & 436 & 2.855 & 15,3\% \\
+Giới tính & Nam & 461 & 2.816 & 16,4\% \\
+\midrule
+Hôn nhân & Đã kết hôn & 450 & 2.870 & 15,7\% \\
+Hôn nhân & Độc thân & 447 & 2.801 & 16,0\% \\
+\midrule
+Đăng ký email & 0 --- không đăng ký & 462 & 3.099 & 14,9\% \\
+Đăng ký email & 1 --- chỉ AdventureWorks & 268 & 1.506 & 17,8\% \\
+Đăng ký email & 2 --- cả đối tác & 167 & 1.066 & 15,7\% \\
+\end{longtable}
+\end{center}
+
+Mỗi chiều cộng lại đúng 5.671 khách, xác nhận không có khách nào bị mất hoặc đếm trùng khi ghép các nhánh \texttt{UNION ALL}.
+
+% ---------------------------------------------------------------
+\subsection{V08--V09 --- Lý do mua, khuyến mãi và phân bố thời gian}
+
+\begin{lstlisting}
+-- V08b: ly do mua theo kenh. Dem rieng so dong, so don va so khach vi day la
+--       quan he nhieu-nhieu: mot don co the gan nhieu ly do.
+SELECT r.Name, r.ReasonType, h.OnlineOrderFlag,
+       COUNT(*)                        AS reason_rows,
+       COUNT(DISTINCT hr.SalesOrderID) AS orders,
+       COUNT(DISTINCT h.CustomerID)    AS customers
+FROM Sales.SalesOrderHeaderSalesReason hr
+JOIN Sales.SalesReason r      ON r.SalesReasonID = hr.SalesReasonID
+JOIN Sales.SalesOrderHeader h ON h.SalesOrderID  = hr.SalesOrderID
+GROUP BY r.Name, r.ReasonType, h.OnlineOrderFlag
+ORDER BY h.OnlineOrderFlag, reason_rows DESC;
+
+-- V09a: don theo quy, tach hai kenh
+SELECT YEAR(OrderDate) AS yr, DATEPART(QUARTER,OrderDate) AS q,
+       SUM(CASE WHEN OnlineOrderFlag = 1 THEN 1 ELSE 0 END) AS online_orders,
+       SUM(CASE WHEN OnlineOrderFlag = 0 THEN 1 ELSE 0 END) AS reseller_orders,
+       COUNT(*) AS all_orders
+FROM Sales.SalesOrderHeader GROUP BY YEAR(OrderDate), DATEPART(QUARTER,OrderDate)
+ORDER BY yr, q;
+\end{lstlisting}
+
+\qhead{Kết quả V09a --- đơn theo quý}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr@{\hskip 20pt}lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Quý} & \textbf{Online} & \textbf{Đại lý} & \textbf{Tổng} & \textbf{Quý} & \textbf{Online} & \textbf{Đại lý} & \textbf{Tổng} \\
+\midrule
+2011 Q2 & 146 & 36 & 182 & 2013 Q1 & 852 & 314 & 1.166 \\
+2011 Q3 & 463 & 175 & 638 & 2013 Q2 & 1.192 & 383 & 1.575 \\
+2011 Q4 & 592 & 193 & 785 & 2013 Q3 & 4.866 & 454 & 5.320 \\
+2012 Q1 & 594 & 265 & 859 & 2013 Q4 & 5.674 & 447 & 6.121 \\
+2012 Q2 & 673 & 281 & 954 & 2014 Q1 & 5.847 & 449 & 6.296 \\
+2012 Q3 & 705 & 317 & 1.022 & 2014 Q2 & 5.284 & 181 & 5.465 \\
+2012 Q4 & 771 & 311 & 1.082 & & & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Bảng này là căn cứ cho Hình~\ref{fig:quarter}. Cột ``Đại lý'' dao động quanh 450 đơn mỗi quý từ quý 3/2013, nên bước nhảy của cột tổng hoàn toàn đến từ kênh online.
+
+\qhead{Kết quả V08c --- dòng hàng theo loại khuyến mãi}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Kênh} & \textbf{Không giảm giá} & \textbf{Có giảm giá} & \textbf{Tỷ lệ có giảm giá} \\
+\midrule
+Online & 58.247 & 2.151 & 3,6\% \\
+Đại lý & 57.637 & 3.282 & 5,4\% \\
+\midrule
+\textbf{Tổng} & \textbf{115.884} & \textbf{5.433} & \textbf{4,5\%} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ---------------------------------------------------------------
+\subsection{V10--V12 --- Cấu trúc kho, nhịp mua và số đơn mỗi khách}
+
+\begin{lstlisting}
+-- V11: khoang cach giua hai lan mua lien tiep cua cung mot khach.
+--      LAG lay ngay dat cua don lien truoc trong cung mot CustomerID.
+WITH o AS (
+  SELECT CustomerID, OrderDate,
+         LAG(OrderDate) OVER (PARTITION BY CustomerID
+                              ORDER BY OrderDate, SalesOrderID) AS prev
+  FROM Sales.SalesOrderHeader WHERE OnlineOrderFlag = 1)
+SELECT COUNT(*) AS gaps,
+       SUM(CASE WHEN DATEDIFF(day,prev,OrderDate) > 365 THEN 1 ELSE 0 END) AS gaps_over_365,
+       CAST(AVG(DATEDIFF(day,prev,OrderDate)*1.0) AS decimal(8,1))         AS avg_gap,
+       COUNT(DISTINCT CustomerID) AS customers_with_gap
+FROM o WHERE prev IS NOT NULL;
+\end{lstlisting}
+
+\qhead{Kết quả}
+\begin{center}\footnotesize
+\begin{tabular}{llr}
+\toprule
+\rowcolor{tblhead} \textbf{Mã} & \textbf{Chỉ tiêu} & \textbf{Giá trị} \\
+\midrule
+V10a & Số bảng / số view & 72 / 24 \\
+V10a & Khóa chính của bảng cầu lý do mua & (\texttt{SalesOrderID}, \texttt{SalesReasonID}) \\
+V11 & Khoảng cách TB giữa hai lần mua --- khách cá nhân & 317,1 ngày \\
+V11 & Số lần quay lại sau hơn 365 ngày --- cá nhân & 3.472 / 9.175 (37,8\%) \\
+V11 & Khoảng cách TB giữa hai lần mua --- đại lý & 98,7 ngày \\
+V12 & Khách mua 1 lần & 11.649 (60,9\%) \\
+V12 & Khách mua 2 lần & 5.473 (28,6\%) \\
+V12 & Khách mua 3 lần & 1.204 (6,3\%) \\
+V12 & Khách mua 4--5 lần & 456 (2,4\%) \\
+V12 & Khách mua 6--12 lần & 302 (1,6\%) \\
+V12 & Khách mua 13--28 lần & 35 (0,2\%) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Khóa chính ghép của \texttt{Sales.SalesOrderHeaderSalesReason} xác nhận quan hệ nhiều--nhiều đã nêu ở Mục~\ref{sec:overview}: một đơn có thể gắn nhiều lý do, nên mọi thống kê về lý do mua phải đếm riêng số dòng, số đơn và số khách thay vì cộng gộp.
+
+% ---------------------------------------------------------------
+\subsection{V13--V16 --- Truy vấn bổ sung của lần rà soát này}
+
+Bốn truy vấn dưới đây được thêm vào trong quá trình rà soát lại báo cáo, nhằm truy nguyên những con số trước đó chưa có mã truy vấn kèm theo hoặc chưa khớp với kho dữ liệu.
+
+\begin{lstlisting}
+-- V14: so khach CO DON theo lanh tho.
+--      Phep JOIN (thay vi LEFT JOIN) tu dong loai 701 ban ghi khach khong co don,
+--      cho ra mau so 19.119 dung nhu phan con lai cua bao cao.
+SELECT t.Name AS territory,
+       COUNT(DISTINCT c.CustomerID) AS customers_with_orders,
+       COUNT(h.SalesOrderID)        AS orders,
+       CAST(SUM(h.TotalDue) AS decimal(18,0)) AS revenue
+FROM Sales.SalesTerritory t
+JOIN Sales.Customer c         ON c.TerritoryID = t.TerritoryID
+JOIN Sales.SalesOrderHeader h ON h.CustomerID  = c.CustomerID
+GROUP BY t.Name ORDER BY customers_with_orders DESC;
+\end{lstlisting}
+
+\qhead{Kết quả V14 --- khách, đơn và doanh thu theo lãnh thổ}
+\begin{center}\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+\rowcolor{tblhead} \textbf{Lãnh thổ} & \textbf{Khách có đơn} & \textbf{Số đơn} & \textbf{Doanh thu (USD)} \\
+\midrule
+Southwest & 4.565 & 6.224 & 27.119.597 \\
+Australia & 3.625 & 6.843 & 11.814.376 \\
+Northwest & 3.428 & 4.594 & 18.061.660 \\
+United Kingdom & 1.951 & 3.219 & 8.574.049 \\
+France & 1.844 & 2.672 & 8.119.749 \\
+Germany & 1.812 & 2.623 & 5.479.820 \\
+Canada & 1.677 & 4.067 & 18.389.820 \\
+Southeast & 91 & 486 & 8.870.312 \\
+Central & 69 & 385 & 8.913.299 \\
+Northeast & 57 & 352 & 7.812.458 \\
+\midrule
+\textbf{Tổng} & \textbf{19.119} & \textbf{31.465} & \textbf{123.155.140} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{console}{sqlcmd --- V14, khách có đơn theo lãnh thổ}
+$ docker exec sqlserver sqlcmd -S localhost -U sa -P '***' -C -f 65001 \
+      -d CompanyX -i /tmp/d_v14.sql
+lanh_tho        khach_co_don don_hang
+--------------- ------------ -----------
+Southwest               4565        6224
+Australia               3625        6843
+Northwest               3428        4594
+United Kingdom          1951        3219
+France                  1844        2672
+Germany                 1812        2623
+Canada                  1677        4067
+Southeast                 91         486
+Central                   69         385
+Northeast                 57         352
+
+(10 rows affected)
+\end{console}
+
+
+Bảng này cho thấy rõ sự lệch pha giữa số khách và doanh thu đã nêu ở Mục~\ref{sec:who}: Úc đứng thứ hai về số khách nhưng chỉ thứ tư về doanh thu, trong khi Canada đứng thứ bảy về số khách lại đứng thứ hai về doanh thu. Ba vùng Southeast, Central và Northeast cộng lại chỉ có 217 khách nhưng mang về 25,6 triệu USD, vì gần như toàn bộ là đại lý.
+
+\qhead{Kết quả V13, V15, V16}
+\begin{center}\footnotesize
+\begin{tabular}{llr}
+\toprule
+\rowcolor{tblhead} \textbf{Mã} & \textbf{Chỉ tiêu} & \textbf{Giá trị} \\
+\midrule
+V13 & Khách từng quay lại sau khoảng nghỉ hơn 365 ngày & 3.486 \\
+V15 & Tỷ lệ đơn nằm trong 12 tháng cuối --- tất cả & 73,7\% (23.202/31.465) \\
+V15 & Tỷ lệ đơn nằm trong 12 tháng cuối --- chỉ online & 78,4\% \\
+V16 & Khách cá nhân có ít nhất 1 xe hơi & 14.246 / 18.484 = 77,1\% \\
+V16 & Khách cá nhân có nhà riêng & 12.502 / 18.484 = 67,6\% \\
+V16 & Khách cá nhân có con & 13.319 / 18.484 = 72,1\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
 \newpage
 \addcontentsline{toc}{section}{Tài liệu tham khảo}
 \begin{thebibliography}{99}
+\RaggedRight
 \bibitem{aw}
 Microsoft. \textit{AdventureWorks sample databases}. \url{https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure}, truy cập ngày 15/09/2026.
 \bibitem{hughes}
