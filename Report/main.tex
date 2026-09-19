@@ -193,23 +193,23 @@ Số lãnh thổ bán hàng & 10 \\
 
 Nhóm \textbf{Production} cung cấp thông tin mô tả sản phẩm như tên (\texttt{Production.\allowbreak Product.\allowbreak Name}), loại (\texttt{Production.\allowbreak ProductSubcategory.\allowbreak ProductSubcategoryID}) và danh mục (\texttt{Production.\allowbreak ProductCategory.\allowbreak ProductCategoryID}). Các nhóm còn lại hỗ trợ hoạt động nội bộ, bao gồm mua hàng từ nhà cung cấp, quản lý nhân sự và dữ liệu hệ thống.
 
-Mức độ liên quan được đánh giá dựa trên vai trò của từng nhóm đối với phân tích khách hàng và đơn hàng: mức \textbf{Cao} khi chứa trực tiếp dữ liệu khách hàng hoặc giao dịch, mức \textbf{Trung bình} khi hỗ trợ diễn giải giao dịch, và mức \textbf{Thấp} khi không liên kết trực tiếp với khách hàng hoặc đơn hàng. Theo đó, \textbf{Sales} và \textbf{Person} có mức Cao, \textbf{Production} có mức Trung bình vì chỉ ba bảng \texttt{Product}, \texttt{ProductSubcategory} và \texttt{ProductCategory} được dùng để mô tả sản phẩm trong đơn hàng, còn \textbf{Purchasing} và \textbf{HumanResources} có mức Thấp vì chủ yếu liên quan đến nhà cung cấp và nhân viên nội bộ (Bảng~\ref{tab:c1-schemas}).
+Mức độ liên quan được đánh giá dựa trên vai trò của từng nhóm (Schema) đối với phân tích khách hàng và đơn hàng: mức \textbf{Cao} khi chứa trực tiếp dữ liệu khách hàng hoặc giao dịch, mức \textbf{Trung bình} khi hỗ trợ diễn giải giao dịch, và mức \textbf{Thấp} khi không liên kết trực tiếp với khách hàng hoặc đơn hàng. Theo đó, \textbf{Sales} và \textbf{Person} có mức Cao, \textbf{Production} có mức Trung bình vì chỉ ba bảng \texttt{Product}, \texttt{ProductSubcategory} và \texttt{ProductCategory} được dùng để mô tả sản phẩm trong đơn hàng, còn \textbf{Purchasing} và \textbf{HumanResources} có mức Thấp vì chủ yếu liên quan đến nhà cung cấp và nhân viên nội bộ (Bảng~\ref{tab:c1-schemas}).
 
 \begin{table}[H]
 \centering
-\caption{Sáu nhóm bảng nghiệp vụ của CompanyX và mức độ liên quan đến phân tích Customer Churn}
+\caption{Phân loại các schema cơ sở dữ liệu theo chức năng nghiệp vụ và mức độ liên quan đến phân tích khách hàng rời bỏ}
 \label{tab:c1-schemas}
 \small
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.0cm} c >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.2cm}}
 \toprule
-\rowcolor{tblhead} \textbf{Schema} & \textbf{Số bảng} & \textbf{Nội dung chính} & \textbf{Mức độ liên quan} \\
+\rowcolor{tblhead} \textbf{Schema} & \textbf{No. of Tables} & \textbf{Key Table} & \textbf{Relevance to Customer Churn Analysis} \\
 \midrule
-Sales & 19 & Khách hàng, cửa hàng, đơn hàng, chi tiết đơn hàng, lãnh thổ bán hàng, nhân viên kinh doanh, chương trình khuyến mãi, lý do mua hàng, thẻ tín dụng và tỷ giá tiền tệ & Cao \\
-Person & 13 & Thông tin cá nhân, địa chỉ, email, số điện thoại, quốc gia/vùng lãnh thổ và tỉnh/bang & Cao \\
-Production & 25 & Sản phẩm, danh mục sản phẩm, mẫu sản phẩm, tồn kho, công đoạn của lệnh sản xuất và lịch sử giá vốn sản phẩm & Trung bình \\
-Purchasing & 5 & Nhà cung cấp, sản phẩm theo nhà cung cấp, đơn mua hàng và phương thức vận chuyển & Thấp \\
-HumanResources & 6 & Nhân viên, phòng ban, lịch sử lương và ca làm việc & Thấp \\
-dbo & 4 & Nhật ký cơ sở dữ liệu, thông tin phiên bản (AW Build Version), nhật ký lỗi, sơ đồ hệ thống và bốn view bổ sung riêng của CompanyX & Hỗ trợ \\
+Sales & 19 & Customer, store, sales order, sales order detail, sales territory, sales person, special offer, sales reason, credit cards, and currency rate & High \\
+Person & 13 & Personal details, address, email address, Person Phone, country region, and state provinces & High \\
+Production & 25 & Product, product category, product model, product inventory, work order routing, and product cost history & Medium \\
+Purchasing & 5 & Vendor, Product vendor, purchase order, and shipping method & Low \\
+HumanResources & 6 & Employee, department, Employee Pay History, and work shift & Low \\
+dbo & 4 & Database logs, database version information (AW Build Version), Error logs, system diagrams, and four CompanyX-specific supplementary views & Supporting \\
 \bottomrule
 \end{tabularx}
 \end{table}
