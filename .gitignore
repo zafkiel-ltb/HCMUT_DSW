@@ -15,3 +15,9 @@
 
 # Temp
 *.tmp
+
+# Report scratch folder (renders, docx extracts, unused figures)
+Report/tmp/
+
+# Office lock files
+~$*
