@@ -294,14 +294,218 @@ Nhìn chung, luồng dữ liệu chính được hình thành từ khách hàng 
 
 Từ các bảng dữ liệu trên, có thể xây dựng các biến phục vụ phân tích churn như thời gian từ lần mua gần nhất, số lượng đơn hàng, tần suất mua, tổng chi tiêu, số lượng và độ đa dạng sản phẩm, khu vực kinh doanh và mức độ phản hồi với khuyến mãi. Đây là cơ sở để nhận diện khách hàng có nguy cơ ngừng giao dịch và hỗ trợ xây dựng mô hình dự báo Customer Churn.
 
-\subsection{Tổng quan tập khách hàng và bối cảnh nghiệp vụ}
-\subsection{Khách hàng của CompanyX là ai?}
+\subsection{Phân tích tập dữ liệu khách hàng và hành vi rời bỏ}
+\label{sec:c1-customer-analysis}
+
+\subsubsection{Tổng quan và bối cảnh nghiệp vụ}
+\label{sec:c3-overview}
+CompanyX là doanh nghiệp bán lẻ xe đạp, linh kiện, quần áo và phụ kiện thông qua kênh trực tuyến và các cửa hàng. Phân tích khách hàng chủ yếu sử dụng bảng \texttt{Sales.Customer} và \texttt{Sales.SalesOrderHeader}, trong đó bảng khách hàng lưu thông tin định danh khách hàng, còn bảng đơn hàng ghi nhận lịch sử giao dịch.
+
+\begin{table}[H]
+\centering
+\caption{Bối cảnh nghiệp vụ của tập dữ liệu}
+\label{tab:c3-context}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.2cm} X}
+\toprule
+\rowcolor{tblhead} \textbf{Thuộc tính} & \textbf{Giá trị} \\
+\midrule
+Cơ sở dữ liệu & CompanyX \\
+Loại cơ sở dữ liệu & Cơ sở dữ liệu quan hệ, dạng giao dịch (OLTP) \\
+Lĩnh vực kinh doanh & Bán lẻ (Retail Sales) \\
+Thực thể khách hàng & \texttt{Sales.Customer} \\
+Thực thể giao dịch & \texttt{Sales.SalesOrderHeader} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Truy vấn sau cho biết quy mô và khoảng thời gian của dữ liệu.
+
+\begin{sqlblock}
+-- Tổng quan về khách hàng và đơn hàng
+SELECT
+    COUNT(DISTINCT c.CustomerID) AS TotalCustomers,
+    COUNT(DISTINCT soh.SalesOrderID) AS TotalOrders,
+    CAST(MIN(soh.OrderDate) AS date) AS StartDate,
+    CAST(MAX(soh.OrderDate) AS date) AS EndDate,
+    DATEDIFF(month, MIN(soh.OrderDate), MAX(soh.OrderDate))
+        AS TotalMonths,
+    SUM(soh.TotalDue) AS TotalRevenue
+FROM Sales.Customer c
+LEFT JOIN Sales.SalesOrderHeader soh ON c.CustomerID = soh.CustomerID;
+\end{sqlblock}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{c3_overview.png}
+\caption{Kết quả truy vấn tổng quan về khách hàng và đơn hàng.}
+\label{fig:c3-overview}
+\end{figure}
+
+Tập dữ liệu gồm 19.820 khách hàng và 31.465 đơn hàng phát sinh trong giai đoạn từ ngày 31/05/2011 đến ngày 30/06/2014. Khoảng thời gian này cung cấp dữ liệu lịch sử đủ dài để xem xét hành vi mua hàng và nhận diện nguy cơ khách hàng ngừng giao dịch. Trong bài toán này, customer churn được hiểu là tình trạng khách hàng không tiếp tục mua hàng trong một khoảng thời gian dài.
+
 \subsubsection{Quy mô và cơ cấu khách hàng}
-\subsubsection{Phân loại đối tượng khách hàng}
+Bảng \texttt{Sales.Customer} phân loại khách hàng thông qua hai trường \texttt{PersonID} và \texttt{StoreID}. Khách hàng cá nhân là những người mua trực tiếp từ công ty, trong khi khách hàng cửa hàng đại diện cho các đơn vị kinh doanh hoặc cửa hàng bán lẻ.
+
+\begin{sqlblock}
+-- Phân loại khách hàng dựa vào hai cột PersonID và StoreID
+SELECT
+    CASE
+        WHEN c.StoreID IS NULL THEN 'Individual Customer'
+        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
+        ELSE 'Store Only (No Orders)'
+    END AS CustomerType,
+    COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers,
+    COUNT(DISTINCT soh.CustomerID) AS WithOrders
+FROM Sales.Customer c
+LEFT JOIN Sales.SalesOrderHeader soh ON soh.CustomerID = c.CustomerID
+GROUP BY
+    CASE
+        WHEN c.StoreID IS NULL THEN 'Individual Customer'
+        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
+        ELSE 'Store Only (No Orders)'
+    END
+ORDER BY NumberOfCustomers DESC;
+\end{sqlblock}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.74\textwidth]{c3_customer_types.png}
+\caption{Kết quả truy vấn phân loại khách hàng theo \texttt{PersonID} và \texttt{StoreID}.}
+\label{fig:c3-customer-types}
+\end{figure}
+
+Trong tổng số 19.820 bản ghi khách hàng, có 18.484 khách hàng cá nhân và 635 khách hàng cửa hàng. Ngoài ra, có 701 bản ghi chỉ có \texttt{StoreID} nhưng chưa phát sinh đơn hàng. Khách hàng cá nhân chiếm tỷ trọng lớn nhất và có lịch sử giao dịch trực tiếp, vì vậy đây là nhóm chính cần tập trung khi phân tích churn. Nhóm khách hàng cửa hàng nên được tách riêng vì hành vi mua hàng có thể khác với khách hàng cá nhân.
+
+\subsubsection{Nhóm đối tượng trong khách hàng}
+Bảng \texttt{Person.Person} lưu thông tin của nhiều nhóm đối tượng khác nhau. Trường \texttt{PersonType} cho biết vai trò của mỗi người, bao gồm khách hàng cá nhân (\texttt{IN}), nhân viên (\texttt{EM}), nhân viên kinh doanh (\texttt{SP}), người liên hệ cửa hàng (\texttt{SC}), người liên hệ nhà cung cấp (\texttt{VC}) và liên hệ chung (\texttt{GC}).
+
+\begin{table}[H]
+\centering
+\caption{Ý nghĩa các mã \texttt{PersonType}}
+\label{tab:c3-persontype}
+\small
+\begin{tabular}{l l}
+\toprule
+\rowcolor{tblhead} \textbf{PersonType} & \textbf{Ý nghĩa} \\
+\midrule
+IN & Khách hàng cá nhân \\
+EM & Nhân viên \\
+SP & Nhân viên kinh doanh \\
+SC & Người liên hệ của cửa hàng \\
+VC & Người liên hệ của nhà cung cấp \\
+GC & Liên hệ chung \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{sqlblock}
+-- Số người theo từng nhóm đối tượng trong bảng Person.Person
+SELECT PersonType,
+       COUNT(*) AS NumberOfPeople
+FROM Person.Person
+GROUP BY PersonType
+ORDER BY NumberOfPeople DESC;
+\end{sqlblock}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{c3_person_types.png}
+\caption{Kết quả truy vấn số người theo từng nhóm \texttt{PersonType}.}
+\label{fig:c3-person-types}
+\end{figure}
+
+Nhóm \texttt{IN} có 18.484 bản ghi, đúng bằng số lượng khách hàng cá nhân trong bảng \texttt{Sales.Customer}. Vì vậy, trường \texttt{PersonType} có thể được dùng để xác định đúng tập khách hàng cần phân tích. Điều này giúp loại bỏ nhân viên, nhà cung cấp, nhân viên bán hàng và các đối tượng không phải khách hàng trước khi xây dựng mô hình churn.
+
 \subsubsection{Phân bố địa lý}
+Thông tin địa lý được xác định bằng cách liên kết dữ liệu khách hàng với bảng địa chỉ, tỉnh hoặc bang và quốc gia. Hoa Kỳ là thị trường có số lượng khách hàng cá nhân lớn nhất, với 7.819 khách hàng, tiếp theo là Úc với 3.591 khách hàng. Vương quốc Anh, Pháp, Đức và Canada đều có từ 1.571 đến 1.913 khách hàng.
+
+\begin{sqlblock}
+-- Số khách hàng cá nhân theo quốc gia
+SELECT cr.Name AS Country,
+       COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers
+FROM Sales.Customer c
+JOIN Person.BusinessEntityAddress bea
+    ON bea.BusinessEntityID = c.PersonID
+JOIN Person.Address a ON a.AddressID = bea.AddressID
+JOIN Person.StateProvince sp ON sp.StateProvinceID = a.StateProvinceID
+JOIN Person.CountryRegion cr
+    ON cr.CountryRegionCode = sp.CountryRegionCode
+WHERE c.StoreID IS NULL
+GROUP BY cr.Name
+ORDER BY NumberOfCustomers DESC;
+\end{sqlblock}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{c3_country.png}
+\caption{Kết quả truy vấn số khách cá nhân theo quốc gia.}
+\label{fig:c3-country}
+\end{figure}
+
+Phân bố này cho thấy CompanyX phục vụ khách hàng tại nhiều thị trường khác nhau. Vì vậy, quốc gia hoặc khu vực có thể được sử dụng làm biến phân khúc để so sánh hành vi mua hàng, giá trị khách hàng và nguy cơ churn giữa các thị trường.
+
 \subsubsection{Giá trị khách hàng theo mô hình RFM}
+\label{sec:c3-rfm}
+Giá trị khách hàng được đánh giá theo mô hình RFM, bao gồm Recency, Frequency và Monetary. Recency phản ánh khoảng thời gian kể từ lần mua gần nhất, Frequency thể hiện số lần khách hàng mua hàng, còn Monetary là tổng giá trị chi tiêu của khách hàng.
 
+\begin{table}[H]
+\centering
+\caption{Ba tiêu chí của mô hình RFM}
+\label{tab:rfm}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.2cm} X l}
+\toprule
+\rowcolor{tblhead} \textbf{Tiêu chí} & \textbf{Ý nghĩa} & \textbf{Dữ liệu sử dụng} \\
+\midrule
+Tổng doanh thu cao (Monetary) & Đóng góp nhiều tiền cho công ty & \texttt{SUM(TotalDue)} \\
+Mua hàng thường xuyên (Frequency) & Mức độ gắn bó cao & \texttt{COUNT(SalesOrderID)} \\
+Mua hàng gần đây (Recency) & Vẫn đang hoạt động & \texttt{MAX(OrderDate)} \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
+\begin{sqlblock}
+-- Monetary: 10 khách hàng có doanh thu cao nhất và giá trị mỗi đơn
+SELECT TOP 10
+    CAST(CustomerID AS varchar) AS CustomerID,
+    COUNT(*) AS TotalOrders,
+    CAST(SUM(TotalDue) AS decimal(18,2)) AS TotalRevenue,
+    CAST(AVG(TotalDue) AS decimal(18,2)) AS AverageOrderValue
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID
+ORDER BY TotalRevenue DESC;
+\end{sqlblock}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.93\textwidth]{c3_top_revenue.png}
+\caption{Kết quả truy vấn 10 khách có tổng doanh thu cao nhất, kèm số đơn và giá trị trung bình mỗi đơn.}
+\label{fig:c3-top-revenue}
+\end{figure}
+
+Khách hàng có mã 29818 tạo ra doanh thu cao nhất, đạt 989.184,08 USD từ 12 đơn hàng. Phần lớn khách hàng trong nhóm có doanh thu cao nhất cũng có 12 đơn hàng, với giá trị đơn hàng trung bình từ 68.365,30 USD đến 82.432,01 USD. Khách hàng 29701 chỉ có 8 đơn hàng nhưng có giá trị đơn hàng trung bình cao nhất, đạt 105.233,32 USD cho mỗi đơn hàng.
+
+Xét về tần suất mua hàng, hai khách hàng 11091 và 11176 đều đặt 28 đơn hàng, là mức cao nhất trong dữ liệu. Đây là các khách hàng có mức độ gắn bó cao và cần được ưu tiên trong hoạt động duy trì khách hàng. Ngược lại, những khách hàng mua ít lần hoặc đã lâu không quay lại mua hàng có thể thuộc nhóm có nguy cơ churn cao hơn.
+
+\begin{sqlblock}
+-- Frequency: 10 khách hàng mua nhiều lần nhất
+SELECT TOP 10
+    CAST(CustomerID AS varchar) AS CustomerID,
+    COUNT(*) AS TotalOrders
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID
+ORDER BY TotalOrders DESC, CustomerID;
+\end{sqlblock}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.46\textwidth]{c3_rfm_frequency.png}
+\caption{Kết quả truy vấn 10 khách mua nhiều lần nhất.}
+\label{fig:c3-rfm-frequency}
+\end{figure}
+
+Nhìn chung, tập dữ liệu cung cấp các thông tin quan trọng về loại khách hàng, nhóm đối tượng, vị trí địa lý, tần suất mua hàng, giá trị giao dịch và thời điểm mua gần nhất. Những thông tin này là cơ sở để phân khúc khách hàng và xác định các nhóm có nguy cơ ngừng mua hàng trong tương lai.
 
 \newpage
 
@@ -539,242 +743,16 @@ SELECT (SELECT COUNT(*) FROM Person.BusinessEntity) AS BusinessEntity,
 \label{fig:business-entity-check}
 \end{figure}
 
-805 dòng chênh lệch đúng bằng tổng số cửa hàng (701) và nhà cung cấp (104). \texttt{BusinessEntity} vì vậy là bảng gốc chung: mỗi người, mỗi cửa hàng và mỗi nhà cung cấp đều có một mã trong bảng này. Vì thông tin về một khách hàng nằm rải rác ở nhiều bảng như vậy, Mục~\ref{sec:customer-churn-analysis} sẽ khoanh vùng các bảng liên quan đến khách hàng và nối chúng lại để phân tích.
-
-\subsection{Khách hàng tương tác với công ty như thế nào?}
-\subsubsection{Tần suất mua hàng}
-\subsubsection{Thời gian chưa quay lại mua (Recency}
-\subsubsection{Chu kỳ mua lại}
-\subsubsection{Biến động hành vi theo thời gian}
+805 dòng chênh lệch đúng bằng tổng số cửa hàng (701) và nhà cung cấp (104). \texttt{BusinessEntity} vì vậy là bảng gốc chung: mỗi người, mỗi cửa hàng và mỗi nhà cung cấp đều có một mã trong bảng này.
 
 \newpage
 
-\section{Phân tích tập dữ liệu khách hàng và hành vi rời bỏ}
+\section{Khách hàng tương tác với công ty như thế nào?}
 \label{sec:customer-churn-analysis}
 
-Mục~\ref{sec:db-analysis} đã khảo sát toàn bộ cơ sở dữ liệu, mục này đi sâu vào các bảng về khách hàng để chuẩn bị cho bài toán rời bỏ (churn), tức việc khách ngừng mua hàng của công ty. Các bảng được sử dụng đã được trình bày ở Mục~\ref{sec:c1-churn-tables}, nên mục này gồm bối cảnh dữ liệu và hai yêu cầu phân tích: khách hàng là ai (Mục~\ref{sec:c3-who}) và khách hàng tương tác với công ty như thế nào (Mục~\ref{sec:c3-how}).
+Mục~\ref{sec:c1-customer-analysis} đã mô tả khách hàng của CompanyX là ai, mục này xem xét hành vi mua qua bốn khía cạnh: tần suất mua, thời gian chưa quay lại, chu kỳ mua lại và sự thay đổi hành vi theo thời gian, còn giá trị chi tiêu đã được xét ở Mục~\ref{sec:c3-rfm}.
 
-\subsection{Tổng quan và bối cảnh nghiệp vụ}
-\label{sec:c3-overview}
-Bảng~\ref{tab:c3-context} tóm tắt bối cảnh của tập dữ liệu.
-
-\begin{table}[H]
-\centering
-\caption{Bối cảnh nghiệp vụ của tập dữ liệu}
-\label{tab:c3-context}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.2cm} X}
-\toprule
-\rowcolor{tblhead} \textbf{Thuộc tính} & \textbf{Giá trị} \\
-\midrule
-Cơ sở dữ liệu & CompanyX \\
-Loại cơ sở dữ liệu & Cơ sở dữ liệu quan hệ, dạng giao dịch (OLTP) \\
-Lĩnh vực kinh doanh & Bán lẻ (Retail Sales) \\
-Thực thể khách hàng & \texttt{Sales.Customer} \\
-Thực thể giao dịch & \texttt{Sales.SalesOrderHeader} \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Truy vấn sau cho biết quy mô và khoảng thời gian của dữ liệu.
-
-\begin{sqlblock}
--- Tổng quan về khách hàng và đơn hàng
-SELECT
-    COUNT(DISTINCT c.CustomerID) AS TotalCustomers,
-    COUNT(DISTINCT soh.SalesOrderID) AS TotalOrders,
-    CAST(MIN(soh.OrderDate) AS date) AS StartDate,
-    CAST(MAX(soh.OrderDate) AS date) AS EndDate,
-    DATEDIFF(month, MIN(soh.OrderDate), MAX(soh.OrderDate))
-        AS TotalMonths,
-    SUM(soh.TotalDue) AS TotalRevenue
-FROM Sales.Customer c
-LEFT JOIN Sales.SalesOrderHeader soh ON c.CustomerID = soh.CustomerID;
-\end{sqlblock}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{c3_overview.png}
-\caption{Kết quả truy vấn tổng quan về khách hàng và đơn hàng.}
-\label{fig:c3-overview}
-\end{figure}
-
-CompanyX có 19.820 khách hàng và 31.465 giao dịch (đơn hàng), phát sinh từ ngày 31/05/2011 đến ngày 30/06/2014.
-
-\subsection{Yêu cầu 1: Khách hàng của CompanyX là ai?}
-\label{sec:c3-who}
-Yêu cầu này mô tả hồ sơ khách hàng qua bốn góc nhìn: quy mô và cơ cấu, nhóm đối tượng, vị trí địa lý và giá trị của khách.
-
-\subsubsection{Quy mô và cơ cấu khách hàng}
-Bảng \texttt{Sales.Customer} phân biệt khách cá nhân và khách cửa hàng bằng hai cột \texttt{PersonID} và \texttt{StoreID}. Khách cửa hàng cũng có \texttt{PersonID} (người liên hệ của cửa hàng), nên truy vấn xét cả hai cột để phân loại đúng.
-
-\begin{sqlblock}
--- Phân loại khách hàng dựa vào hai cột PersonID và StoreID
-SELECT
-    CASE
-        WHEN c.StoreID IS NULL THEN 'Individual Customer'
-        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
-        ELSE 'Store Only (No Orders)'
-    END AS CustomerType,
-    COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers,
-    COUNT(DISTINCT soh.CustomerID) AS WithOrders
-FROM Sales.Customer c
-LEFT JOIN Sales.SalesOrderHeader soh ON soh.CustomerID = c.CustomerID
-GROUP BY
-    CASE
-        WHEN c.StoreID IS NULL THEN 'Individual Customer'
-        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
-        ELSE 'Store Only (No Orders)'
-    END
-ORDER BY NumberOfCustomers DESC;
-\end{sqlblock}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.74\textwidth]{c3_customer_types.png}
-\caption{Kết quả truy vấn phân loại khách hàng theo \texttt{PersonID} và \texttt{StoreID}.}
-\label{fig:c3-customer-types}
-\end{figure}
-
-Trong 19.820 dòng của bảng khách hàng, 18.484 dòng là khách cá nhân và 635 dòng là khách cửa hàng, 701 dòng còn lại chỉ có \texttt{StoreID} và chưa có đơn hàng nào. Khách cá nhân chiếm đa số, và hai nhóm khách có thể tách riêng ngay từ đầu trước khi phân tích rời bỏ.
-
-\subsubsection{Nhóm đối tượng trong Person.Person}
-Bảng \texttt{Person.Person} lưu nhiều nhóm người khác nhau, cột \texttt{PersonType} cho biết mỗi người thuộc nhóm nào.
-
-\begin{sqlblock}
--- Số người theo từng nhóm đối tượng trong bảng Person.Person
-SELECT PersonType,
-       COUNT(*) AS NumberOfPeople
-FROM Person.Person
-GROUP BY PersonType
-ORDER BY NumberOfPeople DESC;
-\end{sqlblock}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.5\textwidth]{c3_person_types.png}
-\caption{Kết quả truy vấn số người theo từng nhóm \texttt{PersonType}.}
-\label{fig:c3-person-types}
-\end{figure}
-
-Bảng~\ref{tab:c3-persontype} giải thích ý nghĩa của từng mã.
-
-\begin{table}[H]
-\centering
-\caption{Ý nghĩa các mã \texttt{PersonType}}
-\label{tab:c3-persontype}
-\small
-\begin{tabular}{l l}
-\toprule
-\rowcolor{tblhead} \textbf{PersonType} & \textbf{Ý nghĩa} \\
-\midrule
-IN & Khách hàng cá nhân \\
-EM & Nhân viên \\
-SP & Nhân viên kinh doanh \\
-SC & Người liên hệ của cửa hàng \\
-VC & Người liên hệ của nhà cung cấp \\
-GC & Liên hệ chung \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Nhóm IN chiếm tỷ trọng lớn nhất với 18.484 người, đúng bằng số khách cá nhân ở mục trên. Nhờ cột này, có thể tách khách hàng khỏi những người không phải khách (nhân viên, người liên hệ của nhà cung cấp) khi xác định tập khách để phân tích rời bỏ.
-
-\subsubsection{Phân bố địa lý}
-Truy vấn sau đếm số khách cá nhân theo quốc gia, dựa trên địa chỉ của từng khách.
-
-\begin{sqlblock}
--- Số khách hàng cá nhân theo quốc gia
-SELECT cr.Name AS Country,
-       COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers
-FROM Sales.Customer c
-JOIN Person.BusinessEntityAddress bea
-    ON bea.BusinessEntityID = c.PersonID
-JOIN Person.Address a ON a.AddressID = bea.AddressID
-JOIN Person.StateProvince sp ON sp.StateProvinceID = a.StateProvinceID
-JOIN Person.CountryRegion cr
-    ON cr.CountryRegionCode = sp.CountryRegionCode
-WHERE c.StoreID IS NULL
-GROUP BY cr.Name
-ORDER BY NumberOfCustomers DESC;
-\end{sqlblock}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.5\textwidth]{c3_country.png}
-\caption{Kết quả truy vấn số khách cá nhân theo quốc gia.}
-\label{fig:c3-country}
-\end{figure}
-
-Mỹ có nhiều khách nhất (7.819), tiếp theo là Úc (3.591), còn Anh, Pháp, Đức và Canada mỗi nước có từ 1.571 đến 1.913 khách. Dữ liệu này cho phép phân nhóm khách hàng theo khu vực và phân tích rời bỏ theo vùng địa lý.
-
-\subsubsection{Giá trị khách hàng theo mô hình RFM}
-\label{sec:c3-rfm}
-Một khách được xem là quan trọng nếu có giá trị giao dịch cao theo mô hình RFM, gồm ba tiêu chí trong Bảng~\ref{tab:rfm}.
-
-\begin{table}[H]
-\centering
-\caption{Ba tiêu chí của mô hình RFM}
-\label{tab:rfm}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.2cm} X l}
-\toprule
-\rowcolor{tblhead} \textbf{Tiêu chí} & \textbf{Ý nghĩa} & \textbf{Dữ liệu sử dụng} \\
-\midrule
-Tổng doanh thu cao (Monetary) & Đóng góp nhiều tiền cho công ty & \texttt{SUM(TotalDue)} \\
-Mua hàng thường xuyên (Frequency) & Mức độ gắn bó cao & \texttt{COUNT(SalesOrderID)} \\
-Mua hàng gần đây (Recency) & Vẫn đang hoạt động & \texttt{MAX(OrderDate)} \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Hai truy vấn dưới đây tìm 10 khách có doanh thu cao nhất và 10 khách mua nhiều lần nhất, còn tiêu chí Recency được phân tích ở Mục~\ref{sec:c3-recency}.
-
-\begin{sqlblock}
--- Monetary: 10 khách hàng có doanh thu cao nhất và giá trị mỗi đơn
-SELECT TOP 10
-    CAST(CustomerID AS varchar) AS CustomerID,
-    COUNT(*) AS TotalOrders,
-    CAST(SUM(TotalDue) AS decimal(18,2)) AS TotalRevenue,
-    CAST(AVG(TotalDue) AS decimal(18,2)) AS AverageOrderValue
-FROM Sales.SalesOrderHeader
-GROUP BY CustomerID
-ORDER BY TotalRevenue DESC;
-\end{sqlblock}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.93\textwidth]{c3_top_revenue.png}
-\caption{Kết quả truy vấn 10 khách có tổng doanh thu cao nhất, kèm số đơn và giá trị trung bình mỗi đơn.}
-\label{fig:c3-top-revenue}
-\end{figure}
-
-Khách 29818 dẫn đầu với 989.184,08 USD qua 12 đơn. Theo giá trị trung bình mỗi đơn (AOV -- Average Order Value, bằng tổng doanh thu chia cho số đơn), phần lớn khách trong danh sách có 12 đơn với giá trị từ 68.365,30 đến 82.432,01 USD mỗi đơn, riêng khách 29701 chỉ có 8 đơn nhưng giá trị mỗi đơn cao nhất (105.233,32 USD).
-
-\begin{sqlblock}
--- Frequency: 10 khách hàng mua nhiều lần nhất
-SELECT TOP 10
-    CAST(CustomerID AS varchar) AS CustomerID,
-    COUNT(*) AS TotalOrders
-FROM Sales.SalesOrderHeader
-GROUP BY CustomerID
-ORDER BY TotalOrders DESC, CustomerID;
-\end{sqlblock}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.46\textwidth]{c3_rfm_frequency.png}
-\caption{Kết quả truy vấn 10 khách mua nhiều lần nhất.}
-\label{fig:c3-rfm-frequency}
-\end{figure}
-
-Hai khách 11091 và 11176 mua nhiều nhất với 28 đơn, tám khách tiếp theo có 27 đơn.
-
-\subsection{Yêu cầu 2: Khách hàng tương tác với công ty như thế nào?}
-\label{sec:c3-how}
-Yêu cầu này xem xét hành vi mua qua bốn khía cạnh: tần suất mua, thời gian chưa quay lại, chu kỳ mua lại và sự thay đổi hành vi theo thời gian, còn giá trị chi tiêu đã được xét ở Mục~\ref{sec:c3-rfm}.
-
-\subsubsection{Tần suất mua hàng}
+\subsection{Tần suất mua hàng}
 Truy vấn sau đếm số khách theo số lần mua.
 
 \begin{sqlblock}
@@ -802,7 +780,7 @@ ORDER BY OrderCount;
 
 Khoảng 60,9\% khách chỉ mua một lần và 89,6\% khách mua từ một đến hai lần, chỉ khoảng 10,4\% khách mua từ ba lần trở lên. Điều này cho thấy tỷ lệ mua lặp lại còn tương đối thấp, phần lớn khách hàng chưa hình thành hành vi mua thường xuyên.
 
-\subsubsection{Thời gian chưa quay lại mua (Recency)}
+\subsection{Thời gian chưa quay lại mua (Recency)}
 \label{sec:c3-recency}
 Recency cho biết khách đã bao lâu chưa mua, tính đến ngày cuối của dữ liệu (30/06/2014), đây là chỉ số quan trọng đối với phân tích rời bỏ.
 
@@ -826,7 +804,7 @@ ORDER BY DaysSinceLastPurchase DESC, CustomerID;
 
 Khách 28389 lâu nhất chưa quay lại, 1.126 ngày kể từ lần mua cuối ngày 31/05/2011, cả 10 khách trong danh sách đều đã hơn 1.100 ngày không mua.
 
-\subsubsection{Chu kỳ mua lại}
+\subsection{Chu kỳ mua lại}
 Số lần mua chưa cho biết khoảng cách giữa các lần mua. Ví dụ, hai khách cùng có 5 đơn, nhưng một người mua liên tục trong 5 tháng liền, còn người kia mua rải rác từ năm 2011 đến năm 2014, đây là hai hành vi rất khác nhau. Truy vấn sau tính khoảng cách trung bình giữa hai lần mua liên tiếp của từng khách.
 
 \begin{sqlblock}
@@ -857,7 +835,7 @@ ORDER BY AvgDaysBetweenOrders DESC, CustomerID;
 
 Khách 16624 có khoảng cách trung bình dài nhất, 1.089 ngày, tức gần ba năm mới quay lại mua, cả 10 khách trong danh sách đều có khoảng cách trên 1.060 ngày.
 
-\subsubsection{Biến động hành vi theo thời gian}
+\subsection{Biến động hành vi theo thời gian}
 Một khách có thể chưa rời bỏ nhưng đang mua ít dần, ví dụ năm 2012 mua 8 đơn, năm 2013 mua 5 đơn và năm 2014 chỉ mua 1 đơn. Biến động này được theo dõi ở hai cấp: từng khách hàng và toàn công ty.
 
 Ở cấp khách hàng, truy vấn sau tổng hợp số đơn và doanh thu theo năm của hai khách mẫu.
