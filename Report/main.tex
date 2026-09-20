@@ -39,8 +39,8 @@
 \widowpenalty=10000
 \clubpenalty=10000
 \captionsetup{font=small,labelfont=bf,skip=8pt,justification=centering}
-% Dẫn nguồn số liệu: chỉ số mũ trỏ tới hình chứa kết quả truy vấn tạo ra số đó
-\newcommand{\nguon}[1]{\textsuperscript{\,#1}}
+% Dẫn nguồn số liệu: chỉ số mũ là số hiệu hình chứa kết quả truy vấn tạo ra số đó
+\newcommand{\nguon}[1]{\textsuperscript{\,\ref{#1}}}
 \setlist{itemsep=3pt, topsep=4pt}
 \titlespacing*{\section}{0pt}{12pt}{4pt}
 \titlespacing*{\subsection}{0pt}{8pt}{2pt}
@@ -168,7 +168,7 @@
 \label{sec:c1-origin}
 CompanyX là tên được đặt lại cho một cơ sở dữ liệu cung cấp dưới dạng tệp sao lưu \textit{CompanyX.bak} với dung lượng 214 MB. Bộ dữ liệu mô phỏng một doanh nghiệp sản xuất và kinh doanh xe đạp, linh kiện, quần áo và phụ kiện, phục vụ khách hàng cá nhân qua kênh trực tuyến và khách hàng bán sỉ qua các đại lý tại Bắc Mỹ, Châu Âu và Châu Úc.
 
-Cơ sở dữ liệu gồm 72 bảng thuộc 6 nhóm nghiệp vụ\nguon{Hình~\ref{fig:schema-table-column-counts}} và 24 view. Dữ liệu giao dịch kéo dài từ 31/05/2011 đến 30/06/2014, ghi nhận 31.465 đơn hàng từ 19.119 khách hàng\nguon{Hình~\ref{fig:c3-customer-types}}, với 121.317 dòng sản phẩm\nguon{Hình~\ref{fig:row-count-by-table}} và tổng doanh thu khoảng 123,16 triệu USD\nguon{Hình~\ref{fig:c3-overview}}.
+Cơ sở dữ liệu gồm 72 bảng thuộc 6 nhóm nghiệp vụ\nguon{fig:schema-table-column-counts} và 24 view. Dữ liệu giao dịch kéo dài từ 31/05/2011 đến 30/06/2014, ghi nhận 31.465 đơn hàng từ 19.119 khách hàng\nguon{fig:c3-customer-types}, với 121.317 dòng sản phẩm\nguon{fig:row-count-by-table} và tổng doanh thu khoảng 123,16 triệu USD\nguon{fig:c3-overview}.
 
 Danh mục gồm 504 sản phẩm, trong đó 295 sản phẩm được phân loại vào 37 danh mục con thuộc 4 danh mục lớn, 266 sản phẩm đã phát sinh giao dịch. Dữ liệu thời gian được ghi nhận theo ngày. Dù đơn hàng hiển thị nhiều loại tiền tệ, \textit{UnitPrice} được lưu theo giá niêm yết USD, do đó doanh thu có thể cộng gộp trực tiếp mà không cần quy đổi tiền tệ.
 
@@ -181,14 +181,14 @@ Danh mục gồm 504 sản phẩm, trong đó 295 sản phẩm được phân lo
 \toprule
 \rowcolor{tblhead} \textbf{Đặc điểm cơ sở dữ liệu} & \textbf{Chi tiết} \\
 \midrule
-Số bảng dữ liệu & 72 bảng, chia thành 6 nhóm nghiệp vụ\nguon{Hình~\ref{fig:schema-table-column-counts}} \\
+Số bảng dữ liệu & 72 bảng, chia thành 6 nhóm nghiệp vụ\nguon{fig:schema-table-column-counts} \\
 Số view & 24 view \\
-Khoảng thời gian giao dịch & 31/05/2011 -- 30/06/2014 (37 tháng)\nguon{Hình~\ref{fig:c3-overview}} \\
-Số khách hàng có mua hàng & 19.119 khách hàng\nguon{Hình~\ref{fig:c3-customer-types}} \\
-Số cửa hàng & 701 cửa hàng\nguon{Hình~\ref{fig:business-entity-check}} \\
-Số nhà cung cấp & 104 nhà cung cấp\nguon{Hình~\ref{fig:business-entity-check}} \\
-Số đơn hàng & 31.465 đơn hàng\nguon{Hình~\ref{fig:c3-overview}}, gồm 121.317 dòng sản phẩm\nguon{Hình~\ref{fig:row-count-by-table}} \\
-Tổng doanh thu & 123,16 triệu USD\nguon{Hình~\ref{fig:c3-overview}} \\
+Khoảng thời gian giao dịch & 31/05/2011 -- 30/06/2014 (37 tháng)\nguon{fig:c3-overview} \\
+Số khách hàng có mua hàng & 19.119 khách hàng\nguon{fig:c3-customer-types} \\
+Số cửa hàng & 701 cửa hàng\nguon{fig:business-entity-check} \\
+Số nhà cung cấp & 104 nhà cung cấp\nguon{fig:business-entity-check} \\
+Số đơn hàng & 31.465 đơn hàng\nguon{fig:c3-overview}, gồm 121.317 dòng sản phẩm\nguon{fig:row-count-by-table} \\
+Tổng doanh thu & 123,16 triệu USD\nguon{fig:c3-overview} \\
 Số sản phẩm & 504 sản phẩm, 295 sản phẩm được phân loại vào 37 danh mục con thuộc 4 danh mục lớn. Có 266 sản phẩm xuất hiện trong đơn hàng và tất cả đều đã được phân loại. \\
 Số lãnh thổ bán hàng & 10 \\
 \bottomrule
@@ -197,7 +197,7 @@ Số lãnh thổ bán hàng & 10 \\
 
 \subsection{Sáu nhóm bảng theo chức năng nghiệp vụ}
 \label{sec:c1-schemas}
-72 bảng dữ liệu được chia thành 6 nhóm theo chức năng nghiệp vụ\nguon{Hình~\ref{fig:schema-table-column-counts}}. Trong đó, \textbf{Sales} và \textbf{Person} là hai nhóm quan trọng nhất cho phân tích khách hàng và bán hàng vì chứa thông tin về khách hàng, đơn hàng và sản phẩm đã mua.
+72 bảng dữ liệu được chia thành 6 nhóm theo chức năng nghiệp vụ\nguon{fig:schema-table-column-counts}. Trong đó, \textbf{Sales} và \textbf{Person} là hai nhóm quan trọng nhất cho phân tích khách hàng và bán hàng vì chứa thông tin về khách hàng, đơn hàng và sản phẩm đã mua.
 
 Nhóm \textbf{Production} cung cấp thông tin mô tả sản phẩm như tên (\texttt{Production.\allowbreak Product.\allowbreak Name}), loại (\texttt{Production.\allowbreak Product\allowbreak Subcategory.\allowbreak Product\allowbreak SubcategoryID}) và danh mục (\texttt{Production.\allowbreak Product\allowbreak Category.\allowbreak Product\allowbreak CategoryID}). Các nhóm còn lại hỗ trợ hoạt động nội bộ, bao gồm mua hàng từ nhà cung cấp, quản lý nhân sự và dữ liệu hệ thống.
 
@@ -422,7 +422,7 @@ ORDER BY NumberOfPeople DESC;
 \label{fig:c3-person-types}
 \end{figure}
 
-Nhóm \texttt{IN} có 18.484 bản ghi, đúng bằng số lượng khách hàng cá nhân trong bảng \texttt{Sales.Customer}\nguon{Hình~\ref{fig:c3-customer-types}}. Vì vậy, trường \texttt{PersonType} có thể được dùng để xác định đúng tập khách hàng cần phân tích. Điều này giúp loại bỏ nhân viên, nhà cung cấp, nhân viên bán hàng và các đối tượng không phải khách hàng trước khi xây dựng mô hình churn.
+Nhóm \texttt{IN} có 18.484 bản ghi, đúng bằng số lượng khách hàng cá nhân trong bảng \texttt{Sales.Customer}\nguon{fig:c3-customer-types}. Vì vậy, trường \texttt{PersonType} có thể được dùng để xác định đúng tập khách hàng cần phân tích. Điều này giúp loại bỏ nhân viên, nhà cung cấp, nhân viên bán hàng và các đối tượng không phải khách hàng trước khi xây dựng mô hình churn.
 
 \subsubsection{Phân bố địa lý}
 Thông tin địa lý được xác định bằng cách liên kết dữ liệu khách hàng với bảng địa chỉ, tỉnh hoặc bang và quốc gia. Hoa Kỳ là thị trường có số lượng khách hàng cá nhân lớn nhất, với 7.819 khách hàng, tiếp theo là Úc với 3.591 khách hàng. Vương quốc Anh, Pháp, Đức và Canada đều có từ 1.571 đến 1.913 khách hàng.
@@ -604,7 +604,7 @@ GROUP BY CASE WHEN So_Cot_PK = 1 THEN N'Khóa đơn' ELSE N'Khóa phức hợp' 
 \label{fig:pk-type-summary}
 \end{figure}
 
-Cả 72 bảng\nguon{Hình~\ref{fig:schema-table-column-counts}} đều có khóa chính: 49 bảng dùng khóa đơn (một cột) và 23 bảng dùng khóa phức hợp (ghép từ hai cột trở lên). Khóa phức hợp cần thiết khi một cột không đủ để phân biệt các dòng, và gặp ở ba dạng bảng: bảng nối hai đối tượng (\texttt{SpecialOfferProduct} ghép chương trình khuyến mãi với sản phẩm), bảng lịch sử (\texttt{ProductCostHistory} ghép sản phẩm với ngày bắt đầu áp dụng giá), và bảng chi tiết chứng từ (\texttt{SalesOrderDetail} ghép mã đơn với số thứ tự dòng). Truy vấn dưới đây lấy tên khóa chính của từng bảng, ở đây lọc theo schema HumanResources để minh họa (Hình~\ref{fig:humanresources-pk-list}).
+Cả 72 bảng\nguon{fig:schema-table-column-counts} đều có khóa chính: 49 bảng dùng khóa đơn (một cột) và 23 bảng dùng khóa phức hợp (ghép từ hai cột trở lên). Khóa phức hợp cần thiết khi một cột không đủ để phân biệt các dòng, và gặp ở ba dạng bảng: bảng nối hai đối tượng (\texttt{SpecialOfferProduct} ghép chương trình khuyến mãi với sản phẩm), bảng lịch sử (\texttt{ProductCostHistory} ghép sản phẩm với ngày bắt đầu áp dụng giá), và bảng chi tiết chứng từ (\texttt{SalesOrderDetail} ghép mã đơn với số thứ tự dòng). Truy vấn dưới đây lấy tên khóa chính của từng bảng, ở đây lọc theo schema HumanResources để minh họa (Hình~\ref{fig:humanresources-pk-list}).
 
 \begin{sqlblock}
 -- Danh sách khóa chính của schema HumanResources
