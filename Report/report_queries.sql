@@ -226,10 +226,10 @@ SELECT (SELECT COUNT(*) FROM Person.BusinessEntity) AS BusinessEntity,
 
 
 -- =============================================================
--- MỤC 3. KHÁCH HÀNG TƯƠNG TÁC VỚI CÔNG TY NHƯ THẾ NÀO?
+-- MỤC 2.4. KHÁCH HÀNG TƯƠNG TÁC VỚI CÔNG TY NHƯ THẾ NÀO?
 -- =============================================================
 
--- [3.1] Số khách hàng theo số lần mua
+-- [2.4.1] Số khách hàng theo số lần mua
 WITH orders_per_customer AS (
     SELECT CustomerID, COUNT(*) AS OrderCount
     FROM Sales.SalesOrderHeader
@@ -243,7 +243,7 @@ FROM orders_per_customer
 GROUP BY OrderCount
 ORDER BY OrderCount;
 
--- [3.2] Những khách hàng lâu nhất chưa quay lại mua (tính đến 30/06/2014)
+-- [2.4.2] Những khách hàng lâu nhất chưa quay lại mua (tính đến 30/06/2014)
 SELECT TOP 10
     CAST(CustomerID AS varchar) AS CustomerID,
     MAX(OrderDate) AS LastPurchaseDate,
@@ -252,7 +252,7 @@ FROM Sales.SalesOrderHeader
 GROUP BY CustomerID
 ORDER BY DaysSinceLastPurchase DESC, CustomerID;
 
--- [3.3] Khoảng cách trung bình giữa hai lần mua của từng khách
+-- [2.4.3] Khoảng cách trung bình giữa hai lần mua của từng khách
 WITH gaps AS (
     SELECT CustomerID,
            DATEDIFF(day,
@@ -269,7 +269,7 @@ WHERE GapDays IS NOT NULL
 GROUP BY CustomerID
 ORDER BY AvgDaysBetweenOrders DESC, CustomerID;
 
--- [3.4] Số đơn và doanh thu theo từng năm của hai khách hàng mẫu
+-- [2.4.4] Số đơn và doanh thu theo từng năm của hai khách hàng mẫu
 SELECT
     CAST(CustomerID AS varchar) AS CustomerID,
     DATENAME(year, OrderDate) AS OrderYear,
@@ -280,7 +280,7 @@ WHERE CustomerID IN (11000, 11001)
 GROUP BY CustomerID, DATENAME(year, OrderDate)
 ORDER BY CustomerID, OrderYear;
 
--- [3.4] Số đơn, số khách có mua và doanh thu theo từng tháng
+-- [2.4.4] Số đơn, số khách có mua và doanh thu theo từng tháng
 SELECT
     DATENAME(year, OrderDate) AS OrderYear,
     MONTH(OrderDate) AS OrderMonth,

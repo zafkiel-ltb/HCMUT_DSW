@@ -745,14 +745,11 @@ SELECT (SELECT COUNT(*) FROM Person.BusinessEntity) AS BusinessEntity,
 
 805 dòng chênh lệch đúng bằng tổng số cửa hàng (701) và nhà cung cấp (104). \texttt{BusinessEntity} vì vậy là bảng gốc chung: mỗi người, mỗi cửa hàng và mỗi nhà cung cấp đều có một mã trong bảng này.
 
-\newpage
-
-\section{Khách hàng tương tác với công ty như thế nào?}
-\label{sec:customer-churn-analysis}
-
+\subsection{Khách hàng tương tác với công ty như thế nào?}
+\label{sec:c3-how}
 Mục~\ref{sec:c1-customer-analysis} đã mô tả khách hàng của CompanyX là ai, mục này xem xét hành vi mua qua bốn khía cạnh: tần suất mua, thời gian chưa quay lại, chu kỳ mua lại và sự thay đổi hành vi theo thời gian, còn giá trị chi tiêu đã được xét ở Mục~\ref{sec:c3-rfm}.
 
-\subsection{Tần suất mua hàng}
+\subsubsection{Tần suất mua hàng}
 Truy vấn sau đếm số khách theo số lần mua.
 
 \begin{sqlblock}
@@ -780,7 +777,7 @@ ORDER BY OrderCount;
 
 Khoảng 60,9\% khách chỉ mua một lần và 89,6\% khách mua từ một đến hai lần, chỉ khoảng 10,4\% khách mua từ ba lần trở lên. Điều này cho thấy tỷ lệ mua lặp lại còn tương đối thấp, phần lớn khách hàng chưa hình thành hành vi mua thường xuyên.
 
-\subsection{Thời gian chưa quay lại mua (Recency)}
+\subsubsection{Thời gian chưa quay lại mua (Recency)}
 \label{sec:c3-recency}
 Recency cho biết khách đã bao lâu chưa mua, tính đến ngày cuối của dữ liệu (30/06/2014), đây là chỉ số quan trọng đối với phân tích rời bỏ.
 
@@ -804,7 +801,7 @@ ORDER BY DaysSinceLastPurchase DESC, CustomerID;
 
 Khách 28389 lâu nhất chưa quay lại, 1.126 ngày kể từ lần mua cuối ngày 31/05/2011, cả 10 khách trong danh sách đều đã hơn 1.100 ngày không mua.
 
-\subsection{Chu kỳ mua lại}
+\subsubsection{Chu kỳ mua lại}
 Số lần mua chưa cho biết khoảng cách giữa các lần mua. Ví dụ, hai khách cùng có 5 đơn, nhưng một người mua liên tục trong 5 tháng liền, còn người kia mua rải rác từ năm 2011 đến năm 2014, đây là hai hành vi rất khác nhau. Truy vấn sau tính khoảng cách trung bình giữa hai lần mua liên tiếp của từng khách.
 
 \begin{sqlblock}
@@ -835,7 +832,7 @@ ORDER BY AvgDaysBetweenOrders DESC, CustomerID;
 
 Khách 16624 có khoảng cách trung bình dài nhất, 1.089 ngày, tức gần ba năm mới quay lại mua, cả 10 khách trong danh sách đều có khoảng cách trên 1.060 ngày.
 
-\subsection{Biến động hành vi theo thời gian}
+\subsubsection{Biến động hành vi theo thời gian}
 Một khách có thể chưa rời bỏ nhưng đang mua ít dần, ví dụ năm 2012 mua 8 đơn, năm 2013 mua 5 đơn và năm 2014 chỉ mua 1 đơn. Biến động này được theo dõi ở hai cấp: từng khách hàng và toàn công ty.
 
 Ở cấp khách hàng, truy vấn sau tổng hợp số đơn và doanh thu theo năm của hai khách mẫu.
