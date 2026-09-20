@@ -576,7 +576,7 @@ ORDER BY So_Cot DESC;
 \label{fig:schema-table-column-counts}
 \end{figure}
 
-
+Production là nhóm lớn nhất với 25 bảng và 169 cột, tiếp theo là Sales với 19 bảng và 137 cột, bốn nhóm còn lại mỗi nhóm chỉ có từ 4 đến 13 bảng. Chia nhỏ như vậy chỉ dùng được khi các bảng nối lại được với nhau, và thứ làm việc đó là \emph{khóa chính} (primary key), tức một cột hoặc một nhóm cột giúp phân biệt từng dòng giống như mã số sinh viên phân biệt từng người học. Truy vấn sau đếm xem bao nhiêu bảng chỉ cần một cột làm khóa và bao nhiêu bảng phải ghép nhiều cột.
 
 
 \begin{sqlblock}[literate={ó}{{\'o}}1 {đ}{{\dj}}1 {ơ}{{\ohorn}}1 {ứ}{{\'\uhorn}}1 {ợ}{{\d\ohorn}}1]
@@ -689,6 +689,7 @@ ORDER BY So_Lan_Duoc_Tham_Chieu DESC, TableName;
 \label{fig:most-referenced-tables}
 \end{figure}
 
+\texttt{Product} bị trỏ tới 14 lần và \texttt{Person} 7 lần, bỏ xa ba bảng xếp sau chỉ có 5 đến 6 lần. Hai bảng dẫn đầu này là hai đối tượng trung tâm của cơ sở dữ liệu, vì gần như mọi nghiệp vụ đều phải gắn vào một sản phẩm hoặc một con người. Với bài toán khách hàng rời bỏ, điều đó có nghĩa là hồ sơ khách phải lấy qua \texttt{Person} còn thứ khách đã mua phải lấy qua \texttt{Product}.
 
 \subsection{Quy mô dữ liệu}
 \label{sec:scale-tables}
