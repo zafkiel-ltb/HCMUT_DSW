@@ -145,20 +145,22 @@ SELECT
 FROM PK_Stat
 GROUP BY CASE WHEN So_Cot_PK = 1 THEN N'Khóa đơn' ELSE N'Khóa phức hợp' END;
 
--- [2.2] Danh sách khóa chính
+-- [2.2] Danh sách khóa chính của schema HumanResources
 SELECT OBJECT_SCHEMA_NAME(parent_object_id) AS SchemaName,
        OBJECT_NAME(parent_object_id)        AS TableName,
        name                                 AS PKName
 FROM sys.key_constraints
 WHERE type = 'PK'
+  AND OBJECT_SCHEMA_NAME(parent_object_id) = 'HumanResources'
 ORDER BY 1, 2;
 
--- [2.2] Danh sách khóa ngoại và bảng được tham chiếu
+-- [2.2] Danh sách khóa ngoại của schema HumanResources và bảng được tham chiếu
 SELECT OBJECT_SCHEMA_NAME(parent_object_id)     AS SchemaName,
        OBJECT_NAME(parent_object_id)            AS TableName,
        name                                     AS FKName,
        OBJECT_NAME(referenced_object_id)        AS RefTable
 FROM sys.foreign_keys
+WHERE OBJECT_SCHEMA_NAME(parent_object_id) = 'HumanResources'
 ORDER BY 1, 2;
 
 -- [2.2] Số khóa ngoại của từng schema

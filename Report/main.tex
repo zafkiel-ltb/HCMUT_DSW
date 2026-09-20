@@ -167,7 +167,7 @@
 \label{sec:c1-origin}
 CompanyX là tên được đặt lại cho một cơ sở dữ liệu cung cấp dưới dạng tệp sao lưu \textit{CompanyX.bak} với dung lượng 214 MB. Bộ dữ liệu mô phỏng một doanh nghiệp sản xuất và kinh doanh xe đạp, linh kiện, quần áo và phụ kiện, phục vụ khách hàng cá nhân qua kênh trực tuyến và khách hàng bán sỉ qua các đại lý tại Bắc Mỹ, Châu Âu và Châu Úc.
 
-Cơ sở dữ liệu gồm 72 bảng thuộc 6 nhóm nghiệp vụ và 24 view. Dữ liệu giao dịch kéo dài từ 31/05/2011 đến 30/06/2014, ghi nhận 31.465 đơn hàng từ 19.119 khách hàng, với 121.317 dòng sản phẩm và tổng doanh thu khoảng 123,16 triệu USD.
+Cơ sở dữ liệu gồm 72 bảng thuộc 6 nhóm nghiệp vụ (Hình~\ref{fig:schema-table-column-counts}) và 24 view. Dữ liệu giao dịch kéo dài từ 31/05/2011 đến 30/06/2014, ghi nhận 31.465 đơn hàng từ 19.119 khách hàng, với 121.317 dòng sản phẩm và tổng doanh thu khoảng 123,16 triệu USD (Hình~\ref{fig:c3-overview}, Hình~\ref{fig:c3-customer-types} và Hình~\ref{fig:row-count-by-table}).
 
 Danh mục gồm 504 sản phẩm, trong đó 295 sản phẩm được phân loại vào 37 danh mục con thuộc 4 danh mục lớn, 266 sản phẩm đã phát sinh giao dịch. Dữ liệu thời gian được ghi nhận theo ngày. Dù đơn hàng hiển thị nhiều loại tiền tệ, \textit{UnitPrice} được lưu theo giá niêm yết USD, do đó doanh thu có thể cộng gộp trực tiếp mà không cần quy đổi tiền tệ.
 
@@ -180,12 +180,14 @@ Danh mục gồm 504 sản phẩm, trong đó 295 sản phẩm được phân lo
 \toprule
 \rowcolor{tblhead} \textbf{Đặc điểm cơ sở dữ liệu} & \textbf{Chi tiết} \\
 \midrule
-Số bảng dữ liệu & 72 bảng, chia thành 6 nhóm nghiệp vụ \\
+Số bảng dữ liệu & 72 bảng, chia thành 6 nhóm nghiệp vụ (Hình~\ref{fig:schema-table-column-counts}) \\
 Số view & 24 view \\
-Khoảng thời gian giao dịch & 31/05/2011 -- 30/06/2014 (37 tháng) \\
-Số khách hàng có mua hàng & 19.119 khách hàng \\
-Số đơn hàng & 31.465 đơn hàng, gồm 121.317 dòng sản phẩm \\
-Tổng doanh thu & 123,16 triệu USD \\
+Khoảng thời gian giao dịch & 31/05/2011 -- 30/06/2014 (37 tháng) (Hình~\ref{fig:c3-overview}) \\
+Số khách hàng có mua hàng & 19.119 khách hàng (Hình~\ref{fig:c3-customer-types}) \\
+Số cửa hàng & 701 cửa hàng (Hình~\ref{fig:business-entity-check}) \\
+Số nhà cung cấp & 104 nhà cung cấp (Hình~\ref{fig:business-entity-check}) \\
+Số đơn hàng & 31.465 đơn hàng (Hình~\ref{fig:c3-overview}), gồm 121.317 dòng sản phẩm (Hình~\ref{fig:row-count-by-table}) \\
+Tổng doanh thu & 123,16 triệu USD (Hình~\ref{fig:c3-overview}) \\
 Số sản phẩm & 504 sản phẩm, 295 sản phẩm được phân loại vào 37 danh mục con thuộc 4 danh mục lớn. Có 266 sản phẩm xuất hiện trong đơn hàng và tất cả đều đã được phân loại. \\
 Số lãnh thổ bán hàng & 10 \\
 \bottomrule
@@ -194,7 +196,7 @@ Số lãnh thổ bán hàng & 10 \\
 
 \subsection{Sáu nhóm bảng theo chức năng nghiệp vụ}
 \label{sec:c1-schemas}
-72 bảng dữ liệu được chia thành 6 nhóm theo chức năng nghiệp vụ. Trong đó, \textbf{Sales} và \textbf{Person} là hai nhóm quan trọng nhất cho phân tích khách hàng và bán hàng vì chứa thông tin về khách hàng, đơn hàng và sản phẩm đã mua.
+72 bảng dữ liệu được chia thành 6 nhóm theo chức năng nghiệp vụ (Hình~\ref{fig:schema-table-column-counts}). Trong đó, \textbf{Sales} và \textbf{Person} là hai nhóm quan trọng nhất cho phân tích khách hàng và bán hàng vì chứa thông tin về khách hàng, đơn hàng và sản phẩm đã mua.
 
 Nhóm \textbf{Production} cung cấp thông tin mô tả sản phẩm như tên (\texttt{Production.\allowbreak Product.\allowbreak Name}), loại (\texttt{Production.\allowbreak Product\allowbreak Subcategory.\allowbreak Product\allowbreak SubcategoryID}) và danh mục (\texttt{Production.\allowbreak Product\allowbreak Category.\allowbreak Product\allowbreak CategoryID}). Các nhóm còn lại hỗ trợ hoạt động nội bộ, bao gồm mua hàng từ nhà cung cấp, quản lý nhân sự và dữ liệu hệ thống.
 
@@ -221,7 +223,7 @@ dbo & 4 & Database logs, database version information (AW Build Version), Error 
 
 \subsection{Các bảng quan trọng và ý nghĩa của chúng}
 \label{sec:c1-tables}
-Bảng~\ref{tab:c1-tables} giới thiệu các bảng và view chính phục vụ phân tích khách hàng. Dữ liệu bao gồm thông tin cá nhân, cửa hàng, đơn hàng, sản phẩm, khuyến mãi và khu vực địa lý.
+Bảng~\ref{tab:c1-tables} giới thiệu các bảng và view chính phục vụ phân tích khách hàng. Dữ liệu bao gồm thông tin cá nhân, cửa hàng, đơn hàng, sản phẩm, khuyến mãi và khu vực địa lý. Số dòng của từng bảng lấy từ Hình~\ref{fig:row-count-by-table} và Hình~\ref{fig:business-entity-check}.
 
 Bảng \texttt{Sales.Customer} lưu danh sách khách hàng, gồm khách hàng cá nhân và khách hàng là đại lý/cửa hàng. Thông tin nhân khẩu học của khách hàng cá nhân được lưu trong bảng \texttt{Person.Person} dưới dạng XML, bao gồm ngày sinh, thu nhập, nghề nghiệp, học vấn, tình trạng hôn nhân và số con. View \texttt{Sales.vPersonDemographics} được sử dụng để tách các thuộc tính này thành các trường dữ liệu riêng, thuận tiện cho phân tích. Tương tự, bảng \texttt{Sales.Store} và view \texttt{Sales.vStoreWithDemographics} cung cấp thông tin về cửa hàng, như loại hình kinh doanh, nhân viên phụ trách, quy mô và doanh số.
 
@@ -419,7 +421,7 @@ ORDER BY NumberOfPeople DESC;
 \label{fig:c3-person-types}
 \end{figure}
 
-Nhóm \texttt{IN} có 18.484 bản ghi, đúng bằng số lượng khách hàng cá nhân trong bảng \texttt{Sales.Customer}. Vì vậy, trường \texttt{PersonType} có thể được dùng để xác định đúng tập khách hàng cần phân tích. Điều này giúp loại bỏ nhân viên, nhà cung cấp, nhân viên bán hàng và các đối tượng không phải khách hàng trước khi xây dựng mô hình churn.
+Nhóm \texttt{IN} có 18.484 bản ghi, đúng bằng số lượng khách hàng cá nhân trong bảng \texttt{Sales.Customer} (Hình~\ref{fig:c3-customer-types}). Vì vậy, trường \texttt{PersonType} có thể được dùng để xác định đúng tập khách hàng cần phân tích. Điều này giúp loại bỏ nhân viên, nhà cung cấp, nhân viên bán hàng và các đối tượng không phải khách hàng trước khi xây dựng mô hình churn.
 
 \subsubsection{Phân bố địa lý}
 Thông tin địa lý được xác định bằng cách liên kết dữ liệu khách hàng với bảng địa chỉ, tỉnh hoặc bang và quốc gia. Hoa Kỳ là thị trường có số lượng khách hàng cá nhân lớn nhất, với 7.819 khách hàng, tiếp theo là Úc với 3.591 khách hàng. Vương quốc Anh, Pháp, Đức và Canada đều có từ 1.571 đến 1.913 khách hàng.
@@ -601,15 +603,16 @@ GROUP BY CASE WHEN So_Cot_PK = 1 THEN N'Khóa đơn' ELSE N'Khóa phức hợp' 
 \label{fig:pk-type-summary}
 \end{figure}
 
-Cả 72 bảng đều có khóa chính: 49 bảng dùng khóa đơn (một cột) và 23 bảng dùng khóa phức hợp (ghép từ hai cột trở lên). Khóa phức hợp cần thiết khi một cột không đủ để phân biệt các dòng, và gặp ở ba dạng bảng: bảng nối hai đối tượng (\texttt{SpecialOfferProduct} ghép chương trình khuyến mãi với sản phẩm), bảng lịch sử (\texttt{ProductCostHistory} ghép sản phẩm với ngày bắt đầu áp dụng giá), và bảng chi tiết chứng từ (\texttt{SalesOrderDetail} ghép mã đơn với số thứ tự dòng). Truy vấn dưới đây lấy tên khóa chính của từng bảng, Hình~\ref{fig:humanresources-pk-list} minh họa với schema HumanResources.
+Cả 72 bảng (Hình~\ref{fig:schema-table-column-counts}) đều có khóa chính: 49 bảng dùng khóa đơn (một cột) và 23 bảng dùng khóa phức hợp (ghép từ hai cột trở lên). Khóa phức hợp cần thiết khi một cột không đủ để phân biệt các dòng, và gặp ở ba dạng bảng: bảng nối hai đối tượng (\texttt{SpecialOfferProduct} ghép chương trình khuyến mãi với sản phẩm), bảng lịch sử (\texttt{ProductCostHistory} ghép sản phẩm với ngày bắt đầu áp dụng giá), và bảng chi tiết chứng từ (\texttt{SalesOrderDetail} ghép mã đơn với số thứ tự dòng). Truy vấn dưới đây lấy tên khóa chính của từng bảng, ở đây lọc theo schema HumanResources để minh họa (Hình~\ref{fig:humanresources-pk-list}).
 
 \begin{sqlblock}
--- Danh sách khóa chính
+-- Danh sách khóa chính của schema HumanResources
 SELECT OBJECT_SCHEMA_NAME(parent_object_id) AS SchemaName,
        OBJECT_NAME(parent_object_id)        AS TableName,
        name                                 AS PKName
 FROM sys.key_constraints
 WHERE type = 'PK'
+  AND OBJECT_SCHEMA_NAME(parent_object_id) = 'HumanResources'
 ORDER BY 1, 2;
 \end{sqlblock}
 
@@ -620,15 +623,16 @@ ORDER BY 1, 2;
 \label{fig:humanresources-pk-list}
 \end{figure}
 
-Bên cạnh khóa chính, \emph{khóa ngoại} (foreign key) là cột trỏ sang khóa chính của một bảng khác, ví dụ cột mã khách hàng trong đơn hàng trỏ về bảng khách hàng. Truy vấn sau liệt kê từng khóa ngoại và bảng mà nó trỏ tới, Hình~\ref{fig:humanresources-fk-list} minh họa với schema HumanResources.
+Bên cạnh khóa chính, \emph{khóa ngoại} (foreign key) là cột trỏ sang khóa chính của một bảng khác, ví dụ cột mã khách hàng trong đơn hàng trỏ về bảng khách hàng. Truy vấn sau liệt kê từng khóa ngoại và bảng mà nó trỏ tới, ở đây lọc theo schema HumanResources để minh họa (Hình~\ref{fig:humanresources-fk-list}).
 
 \begin{sqlblock}
--- Danh sách khóa ngoại và bảng được tham chiếu
+-- Danh sách khóa ngoại của schema HumanResources và bảng được tham chiếu
 SELECT OBJECT_SCHEMA_NAME(parent_object_id)     AS SchemaName,
        OBJECT_NAME(parent_object_id)            AS TableName,
        name                                     AS FKName,
        OBJECT_NAME(referenced_object_id)        AS RefTable
 FROM sys.foreign_keys
+WHERE OBJECT_SCHEMA_NAME(parent_object_id) = 'HumanResources'
 ORDER BY 1, 2;
 \end{sqlblock}
 
