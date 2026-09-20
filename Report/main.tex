@@ -28,6 +28,7 @@
 \usepackage{titlesec}
 \usepackage{listings}
 \usepackage{microtype}
+\usepackage{needspace}
 
 % ---------- Giãn dòng và khoảng cách ----------
 \onehalfspacing
@@ -263,7 +264,7 @@ Hệ thống bổ sung bốn view trong nhóm \texttt{dbo} để hỗ trợ phâ
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.5\textwidth]{c1_dbo_views.png}
+\includegraphics[width=0.62\textwidth]{c1_dbo_views.png}
 \caption{Các bảng và bốn view bổ sung trong schema \texttt{dbo} của CompanyX (DBeaver).}
 \label{fig:c1-dbo-views}
 \end{figure}
@@ -495,6 +496,8 @@ Khách hàng có mã 29818 tạo ra doanh thu cao nhất, đạt 989.184,08 USD 
 
 Xét về tần suất mua hàng, hai khách hàng 11091 và 11176 đều đặt 28 đơn hàng, là mức cao nhất trong dữ liệu. Đây là các khách hàng có mức độ gắn bó cao và cần được ưu tiên trong hoạt động duy trì khách hàng. Ngược lại, những khách hàng mua ít lần hoặc đã lâu không quay lại mua hàng có thể thuộc nhóm có nguy cơ churn cao hơn.
 
+% Giữ câu truy vấn và ảnh kết quả của nó trên cùng một trang
+\needspace{22\baselineskip}
 \begin{sqlblock}
 -- Frequency: 10 khách hàng mua nhiều lần nhất
 SELECT TOP 10
@@ -528,7 +531,7 @@ Muốn khôi phục, trước hết cần biết \emph{tên logic} của hai fil
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{restore_filelistonly.png}
+\includegraphics[width=\textwidth]{restore_filelistonly.png}
 \caption{Kết quả truy vấn \texttt{RESTORE FILELISTONLY}: tên logic (\texttt{LogicalName}) của hai file bên trong \texttt{CompanyX.bak}.}
 \label{fig:filelistonly}
 \end{figure}
@@ -885,7 +888,7 @@ ORDER BY OrderYear, OrderMonth;
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.8\textwidth]{c3_company_monthly.png}
+\includegraphics[width=\textwidth]{c3_company_monthly.png}
 \caption{Kết quả truy vấn số đơn, số khách có mua và doanh thu theo tháng.}
 \label{fig:c3-company-monthly}
 \end{figure}
