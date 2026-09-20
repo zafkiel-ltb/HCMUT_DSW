@@ -267,6 +267,7 @@ Tổng hợp lại, các bảng và view trên là nguồn dữ liệu đầu v�
 \label{sec:c1-churn-tables}
 Để phân tích Customer Churn, dữ liệu cần được tổng hợp từ nhiều bảng khác nhau trong cơ sở dữ liệu CompanyX. Trong đó, \texttt{Sales.Customer} là bảng quan trọng được liên kết với dữ liệu đơn hàng, sản phẩm, thông tin khách hàng, khu vực kinh doanh và lý do mua hàng. Các bảng được lựa chọn được trình bày trong Bảng~\ref{tab:c1-churn-tables}.
 
+
 \begin{table}[H]
 \centering
 \caption{Các bảng được lựa chọn cho phân tích Customer Churn}
@@ -292,6 +293,15 @@ Tổng hợp lại, các bảng và view trên là nguồn dữ liệu đầu v�
 Nhìn chung, luồng dữ liệu chính được hình thành từ khách hàng đến đơn hàng, chi tiết đơn hàng và sản phẩm: \texttt{Sales.Customer} $\rightarrow$ \texttt{Sales.SalesOrderHeader} $\rightarrow$ \texttt{Sales.SalesOrderDetail} $\rightarrow$ \texttt{Production.Product}. Các bảng còn lại bổ sung thông tin về hồ sơ khách hàng, loại hình khách hàng, lãnh thổ kinh doanh và các yếu tố ảnh hưởng đến quyết định mua hàng.
 
 Từ các bảng dữ liệu trên, có thể xây dựng các biến phục vụ phân tích churn như thời gian từ lần mua gần nhất, số lượng đơn hàng, tần suất mua, tổng chi tiêu, số lượng và độ đa dạng sản phẩm, khu vực kinh doanh và mức độ phản hồi với khuyến mãi. Đây là cơ sở để nhận diện khách hàng có nguy cơ ngừng giao dịch và hỗ trợ xây dựng mô hình dự báo Customer Churn.
+
+\subsection{Tổng quan tập khách hàng và bối cảnh nghiệp vụ}
+\subsection{Khách hàng của CompanyX là ai?}
+\subsubsection{Quy mô và cơ cấu khách hàng}
+\subsubsection{Phân loại đối tượng khách hàng}
+\subsubsection{Phân bố địa lý}
+\subsubsection{Giá trị khách hàng theo mô hình RFM}
+
+
 
 \newpage
 
@@ -348,28 +358,8 @@ ORDER BY So_Cot DESC;
 \label{fig:schema-table-column-counts}
 \end{figure}
 
-CompanyX có tổng cộng 72 bảng. Production lớn nhất với 25 bảng và 169 cột, tiếp theo là Sales với 19 bảng và 137 cột, bốn schema còn lại có từ 4 đến 13 bảng. Bảng~\ref{tab:c2-schemas} tóm tắt nội dung của từng schema.
 
-\begin{table}[H]
-\centering
-\caption{Nội dung của sáu schema trong CompanyX}
-\label{tab:c2-schemas}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.1cm} c >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{4.3cm}}
-\toprule
-\rowcolor{tblhead} \textbf{Schema} & \textbf{Số bảng} & \textbf{Nội dung chính} & \textbf{Bảng tiêu biểu} \\
-\midrule
-Production & 25 & Sản phẩm, danh mục, tồn kho, lệnh sản xuất, lịch sử giao dịch sản phẩm & Product, ProductCategory, WorkOrder, TransactionHistory \\
-Sales & 19 & Khách hàng, đơn hàng, cửa hàng đại lý, khuyến mãi, lãnh thổ bán hàng & Customer, SalesOrderHeader, SalesOrderDetail, Store \\
-Person & 13 & Thông tin cá nhân, địa chỉ, email, số điện thoại & Person, Address, EmailAddress, BusinessEntity \\
-HumanResources & 6 & Nhân viên, phòng ban, lịch sử lương, ca làm việc & Employee, Department, EmployeePayHistory, Shift \\
-Purchasing & 5 & Nhà cung cấp, đơn mua hàng, phương thức vận chuyển & Vendor, PurchaseOrderHeader, ShipMethod \\
-dbo & 4 & Bảng hệ thống: phiên bản, nhật ký thay đổi và lỗi, sơ đồ & AWBuildVersion, DatabaseLog, ErrorLog, sysdiagrams \\
-\bottomrule
-\end{tabularx}
-\end{table}
 
-Để các bảng liên kết được với nhau, mỗi bảng cần một \emph{khóa chính} (primary key): một cột hoặc một nhóm cột giúp phân biệt từng dòng, tương tự mã số sinh viên. Truy vấn sau đếm số bảng dùng khóa một cột và số bảng phải ghép nhiều cột.
 
 \begin{sqlblock}[literate={ó}{{\'o}}1 {đ}{{\dj}}1 {ơ}{{\ohorn}}1 {ứ}{{\'\uhorn}}1 {ợ}{{\d\ohorn}}1]
 -- Số bảng dùng khóa đơn và khóa phức hợp
@@ -459,7 +449,7 @@ ORDER BY So_Khoa_Ngoai DESC;
 \label{fig:fk-by-schema}
 \end{figure}
 
-Cộng lại, CompanyX có 90 khóa ngoại, trong đó Sales có nhiều nhất (33), tiếp theo là Production (28) và Person (14). Ở chiều ngược lại, truy vấn sau cho biết bảng nào được các bảng khác trỏ tới nhiều nhất.
+Chúng ta thấy là CompanyX có 90 khóa ngoại, trong đó Sales có nhiều nhất (33), tiếp theo là Production (28) và Person (14). Ở chiều ngược lại, truy vấn sau cho biết bảng nào được các bảng khác trỏ tới nhiều nhất.
 
 \begin{sqlblock}
 -- Những bảng được các bảng khác trỏ tới nhiều nhất
@@ -479,31 +469,8 @@ ORDER BY So_Lan_Duoc_Tham_Chieu DESC, TableName;
 \label{fig:most-referenced-tables}
 \end{figure}
 
-Product (14 lần) và Person (7 lần) được trỏ tới nhiều nhất, tức là hai đối tượng trung tâm mà nhiều nghiệp vụ khác cần đến: sản phẩm và con người. Ngoài ra có bốn trường hợp một bảng trỏ tới cùng một bảng khác hai lần, vì mỗi lần mang một vai trò riêng.
 
-\begin{sqlblock}
--- Bảng con tham chiếu cùng một bảng cha từ 2 lần trở lên
-SELECT
-    OBJECT_SCHEMA_NAME(parent_object_id)     AS Bang_Con_Schema,
-    OBJECT_NAME(parent_object_id)            AS Bang_Con,
-    OBJECT_SCHEMA_NAME(referenced_object_id) AS Bang_Cha_Schema,
-    OBJECT_NAME(referenced_object_id)        AS Bang_Cha,
-    COUNT(*)                                 AS So_Lan_Tham_Chieu
-FROM sys.foreign_keys
-GROUP BY parent_object_id, referenced_object_id
-HAVING COUNT(*) > 1;
-\end{sqlblock}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{fk_multiple_parent_references.png}
-\caption{Các trường hợp bảng con tham chiếu cùng một bảng cha từ hai lần trở lên.}
-\label{fig:fk-multiple-parent-references}
-\end{figure}
-
-\texttt{SalesOrderHeader} cần hai địa chỉ (xuất hóa đơn và giao hàng), \texttt{CurrencyRate} cần hai loại tiền (tiền gốc và tiền quy đổi), \texttt{Product} cần hai đơn vị đo (kích thước và khối lượng). Riêng \texttt{BillOfMaterials} trỏ về \texttt{Product} hai lần để mô tả thành phẩm và linh kiện cấu thành nên nó, vì cả hai đều là sản phẩm.
-
-\subsection{Quy mô dữ liệu và phân loại bảng}
+\subsection{Quy mô dữ liệu ( chỗ này đã bỏ phân loại bảng )}
 \label{sec:scale-tables}
 Để biết mỗi bảng lớn đến đâu, truy vấn dưới đây lấy số dòng từ thống kê mà SQL Server lưu sẵn (\texttt{sys.dm\_db\_partition\_stats}). Cách này không phải đếm lại từng dòng như \texttt{COUNT(*)}, nên nhanh hơn nhiều khi cần xem cả 72 bảng.
 
@@ -556,9 +523,6 @@ ORDER BY Nhom_Bang;
 \label{fig:table-size-groups}
 \end{figure}
 
-18 bảng có từ 10.000 dòng trở lên chứa 96,52\% trong tổng số 760.931 dòng, trong khi 49 bảng dưới 1.000 dòng chỉ chứa 1,09\%. Hai nhóm này đóng vai trò khác nhau. Các bảng lớn ghi lại sự kiện đã xảy ra kèm con số đo được, ví dụ mỗi dòng của \texttt{SalesOrderDetail} là một sản phẩm trong một đơn hàng, với số lượng và đơn giá, loại bảng này trong kho dữ liệu gọi là \emph{bảng sự kiện} (fact table). Trung bình mỗi đơn hàng có khoảng 3,9 dòng sản phẩm (121.317 dòng chi tiết trên 31.465 đơn). Ngược lại, các bảng nhỏ chủ yếu là danh mục tra cứu, trả lời các câu hỏi ``ai, cái gì, ở đâu'' như loại địa chỉ hay đơn vị đo, loại bảng này gọi là \emph{bảng chiều} (dimension table).
-
-Kết quả số dòng còn cho thấy cách dữ liệu được tách bảng. Bốn bảng \texttt{Person}, \texttt{Password}, \texttt{EmailAddress} và \texttt{PersonPhone} có cùng 19.972 dòng (Hình~\ref{fig:row-count-by-table}), tức mỗi người có đúng một mật khẩu, một email và một số điện thoại. Bảng \texttt{BusinessEntity} có 20.777 dòng, nhiều hơn \texttt{Person} 805 dòng, truy vấn sau kiểm tra phần chênh lệch này.
 
 \begin{sqlblock}
 -- Kiểm tra BusinessEntity có bằng Person + Store + Vendor không
@@ -576,6 +540,12 @@ SELECT (SELECT COUNT(*) FROM Person.BusinessEntity) AS BusinessEntity,
 \end{figure}
 
 805 dòng chênh lệch đúng bằng tổng số cửa hàng (701) và nhà cung cấp (104). \texttt{BusinessEntity} vì vậy là bảng gốc chung: mỗi người, mỗi cửa hàng và mỗi nhà cung cấp đều có một mã trong bảng này. Vì thông tin về một khách hàng nằm rải rác ở nhiều bảng như vậy, Mục~\ref{sec:customer-churn-analysis} sẽ khoanh vùng các bảng liên quan đến khách hàng và nối chúng lại để phân tích.
+
+\subsection{Khách hàng tương tác với công ty như thế nào?}
+\subsubsection{Tần suất mua hàng}
+\subsubsection{Thời gian chưa quay lại mua (Recency}
+\subsubsection{Chu kỳ mua lại}
+\subsubsection{Biến động hành vi theo thời gian}
 
 \newpage
 
