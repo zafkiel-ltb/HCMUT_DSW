@@ -40,8 +40,11 @@
 \widowpenalty=10000
 \clubpenalty=10000
 \captionsetup{font=small,labelfont=bf,skip=8pt,justification=centering}
-% Dẫn nguồn số liệu: chỉ số mũ là số hiệu hình chứa kết quả truy vấn tạo ra số đó
-\newcommand{\nguon}[1]{\textsuperscript{\,\ref{#1}}}
+% Đánh số hình và bảng theo chương, ví dụ hình đầu tiên của chương 1 là Hình 1.1
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+% Dẫn nguồn số liệu: chỉ số mũ trỏ tới hình chứa kết quả truy vấn tạo ra số đó
+\newcommand{\nguon}[1]{\textsuperscript{\,(Hình~\ref{#1})}}
 \setlist{itemsep=3pt, topsep=4pt}
 \titlespacing*{\section}{0pt}{12pt}{4pt}
 \titlespacing*{\subsection}{0pt}{8pt}{2pt}
@@ -188,7 +191,8 @@ Khoảng thời gian giao dịch & 31/05/2011 -- 30/06/2014 (37 tháng)\nguon{fi
 Số khách hàng có mua hàng & 19.119 khách hàng\nguon{fig:c3-customer-types} \\
 Số cửa hàng & 701 cửa hàng\nguon{fig:business-entity-check} \\
 Số nhà cung cấp & 104 nhà cung cấp\nguon{fig:business-entity-check} \\
-Số đơn hàng & 31.465 đơn hàng\nguon{fig:c3-overview}, gồm 121.317 dòng sản phẩm\nguon{fig:row-count-by-table} \\
+Số đơn hàng & 31.465 đơn hàng\nguon{fig:c3-overview} \\
+Số dòng sản phẩm & 121.317 dòng\nguon{fig:row-count-by-table} \\
 Tổng doanh thu & 123,16 triệu USD\nguon{fig:c3-overview} \\
 Số sản phẩm & 504 sản phẩm, 295 sản phẩm được phân loại vào 37 danh mục con thuộc 4 danh mục lớn. Có 266 sản phẩm xuất hiện trong đơn hàng và tất cả đều đã được phân loại. \\
 Số lãnh thổ bán hàng & 10 \\
