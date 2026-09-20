@@ -21,3 +21,6 @@ Report/tmp/
 
 # Office lock files
 ~$*
+
+# Ban tai ve tu Overleaf (da ap dung vao repo)
+Overleaf_*.zip
