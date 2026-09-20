@@ -27,13 +27,17 @@
 \usepackage{setspace}
 \usepackage{titlesec}
 \usepackage{listings}
+\usepackage{microtype}
 
 % ---------- Giãn dòng và khoảng cách ----------
 \onehalfspacing
 \setlength{\parskip}{6pt}
 \setlength{\parindent}{18pt}
 \renewcommand{\arraystretch}{1.35}
-\setlength{\emergencystretch}{3em}
+\setlength{\emergencystretch}{1em}
+% Không để một dòng lẻ của đoạn văn bị bỏ lại đầu hoặc cuối trang
+\widowpenalty=10000
+\clubpenalty=10000
 \captionsetup{font=small,labelfont=bf,skip=8pt}
 \captionsetup[table]{justification=centering}
 \setlist{itemsep=3pt, topsep=4pt}
@@ -138,7 +142,7 @@
     & \\
     \textbf{Nhóm}:      & \dots \\
     & \\
-    \textbf{SV thực hiện}: & Lương Bảo Thiên - MSSV \\
+    \textbf{SV thực hiện}: & \dots \\
     \textbf{Phần phụ trách}: & Mục 3 -- Dataset Analysis
     \end{tabular}
 \end{center}
@@ -192,7 +196,7 @@ Số lãnh thổ bán hàng & 10 \\
 \label{sec:c1-schemas}
 72 bảng dữ liệu được chia thành 6 nhóm theo chức năng nghiệp vụ. Trong đó, \textbf{Sales} và \textbf{Person} là hai nhóm quan trọng nhất cho phân tích khách hàng và bán hàng vì chứa thông tin về khách hàng, đơn hàng và sản phẩm đã mua.
 
-Nhóm \textbf{Production} cung cấp thông tin mô tả sản phẩm như tên (\texttt{Production.\allowbreak Product.\allowbreak Name}), loại (\texttt{Production.\allowbreak ProductSubcategory.\allowbreak ProductSubcategoryID}) và danh mục (\texttt{Production.\allowbreak ProductCategory.\allowbreak ProductCategoryID}). Các nhóm còn lại hỗ trợ hoạt động nội bộ, bao gồm mua hàng từ nhà cung cấp, quản lý nhân sự và dữ liệu hệ thống.
+Nhóm \textbf{Production} cung cấp thông tin mô tả sản phẩm như tên (\texttt{Production.\allowbreak Product.\allowbreak Name}), loại (\texttt{Production.\allowbreak Product\allowbreak Subcategory.\allowbreak Product\allowbreak SubcategoryID}) và danh mục (\texttt{Production.\allowbreak Product\allowbreak Category.\allowbreak Product\allowbreak CategoryID}). Các nhóm còn lại hỗ trợ hoạt động nội bộ, bao gồm mua hàng từ nhà cung cấp, quản lý nhân sự và dữ liệu hệ thống.
 
 Mức độ liên quan được đánh giá dựa trên vai trò của từng nhóm (Schema) đối với phân tích khách hàng và đơn hàng: mức \textbf{Cao} khi chứa trực tiếp dữ liệu khách hàng hoặc giao dịch, mức \textbf{Trung bình} khi hỗ trợ diễn giải giao dịch, và mức \textbf{Thấp} khi không liên kết trực tiếp với khách hàng hoặc đơn hàng. Theo đó, \textbf{Sales} và \textbf{Person} có mức Cao, \textbf{Production} có mức Trung bình vì chỉ ba bảng \texttt{Product}, \texttt{ProductSubcategory} và \texttt{ProductCategory} được dùng để mô tả sản phẩm trong đơn hàng, còn \textbf{Purchasing} và \textbf{HumanResources} có mức Thấp vì chủ yếu liên quan đến nhà cung cấp và nhân viên nội bộ (Bảng~\ref{tab:c1-schemas}).
 
@@ -223,7 +227,7 @@ Bảng \texttt{Sales.Customer} lưu danh sách khách hàng, gồm khách hàng 
 
 Dữ liệu giao dịch được lấy từ \texttt{Sales.SalesOrderHeader} và \texttt{Sales.SalesOrderDetail}. Bảng đầu lưu thông tin tổng quan của đơn hàng, gồm ngày đặt, ngày giao, kênh bán, nhân viên bán hàng và tổng giá trị đơn. Bảng còn lại lưu chi tiết sản phẩm, số lượng, đơn giá, giảm giá và khuyến mãi. Các dữ liệu này hỗ trợ phân tích tần suất mua hàng, giá trị chi tiêu và xu hướng mua của khách hàng.
 
-Bên cạnh đó, \texttt{Sales.SalesOrderHeader\-SalesReason} cho biết lý do mua hàng, \texttt{Sales.SpecialOffer} lưu thông tin khuyến mãi, \texttt{Production.Product} mô tả sản phẩm và danh mục sản phẩm, còn \texttt{Person.Address} và \texttt{Person.CountryRegion} cung cấp thông tin địa chỉ và quốc gia của khách hàng.
+Bên cạnh đó, \texttt{Sales.\allowbreak SalesOrderHeader\-SalesReason} cho biết lý do mua hàng, \texttt{Sales.\allowbreak SpecialOffer} lưu thông tin khuyến mãi, \texttt{Production.\allowbreak Product} mô tả sản phẩm và danh mục sản phẩm, còn \texttt{Person.\allowbreak Address} và \texttt{Person.\allowbreak CountryRegion} cung cấp thông tin địa chỉ và quốc gia của khách hàng.
 
 {\small
 \begin{longtable}{>{\raggedright\arraybackslash}p{4.7cm} r >{\raggedright\arraybackslash}p{7.7cm}}
@@ -290,7 +294,7 @@ Tổng hợp lại, các bảng và view trên là nguồn dữ liệu đầu v�
 \end{tabularx}
 \end{table}
 
-Nhìn chung, luồng dữ liệu chính được hình thành từ khách hàng đến đơn hàng, chi tiết đơn hàng và sản phẩm: \texttt{Sales.Customer} $\rightarrow$ \texttt{Sales.SalesOrderHeader} $\rightarrow$ \texttt{Sales.SalesOrderDetail} $\rightarrow$ \texttt{Production.Product}. Các bảng còn lại bổ sung thông tin về hồ sơ khách hàng, loại hình khách hàng, lãnh thổ kinh doanh và các yếu tố ảnh hưởng đến quyết định mua hàng.
+Nhìn chung, luồng dữ liệu chính được hình thành từ khách hàng đến đơn hàng, chi tiết đơn hàng và sản phẩm: \texttt{Sales.\allowbreak Customer} $\rightarrow$ \texttt{Sales.\allowbreak SalesOrderHeader} $\rightarrow$ \texttt{Sales.\allowbreak SalesOrderDetail} $\rightarrow$ \texttt{Production.\allowbreak Product}. Các bảng còn lại bổ sung thông tin về hồ sơ khách hàng, loại hình khách hàng, lãnh thổ kinh doanh và các yếu tố ảnh hưởng đến quyết định mua hàng.
 
 Từ các bảng dữ liệu trên, có thể xây dựng các biến phục vụ phân tích churn như thời gian từ lần mua gần nhất, số lượng đơn hàng, tần suất mua, tổng chi tiêu, số lượng và độ đa dạng sản phẩm, khu vực kinh doanh và mức độ phản hồi với khuyến mãi. Đây là cơ sở để nhận diện khách hàng có nguy cơ ngừng giao dịch và hỗ trợ xây dựng mô hình dự báo Customer Churn.
 
@@ -696,7 +700,7 @@ ORDER BY row_count DESC;
 \label{fig:row-count-by-table}
 \end{figure}
 
-Bảng lớn nhất là \texttt{SalesOrderDetail} của schema Sales với 121.317 dòng, tiếp theo là hai bảng của schema Production: \texttt{TransactionHistory} với 113.530 dòng và \texttt{TransactionHistoryArchive} với 89.253 dòng. Để thấy toàn cảnh 72 bảng, truy vấn sau chia chúng thành ba nhóm theo số dòng.
+Bảng lớn nhất là \texttt{Sales\allowbreak OrderDetail} của schema Sales với 121.317 dòng, tiếp theo là hai bảng của schema Production: \texttt{Transaction\allowbreak History} với 113.530 dòng và \texttt{Transaction\allowbreak History\allowbreak Archive} với 89.253 dòng. Để thấy toàn cảnh 72 bảng, truy vấn sau chia chúng thành ba nhóm theo số dòng.
 
 \begin{sqlblock}
 -- Chia các bảng thành ba nhóm theo số dòng
