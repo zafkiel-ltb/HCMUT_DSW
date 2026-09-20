@@ -1,8 +1,8 @@
 -- =============================================================
--- MỤC 1. CƠ SỞ DỮ LIỆU COMPANYX CÓ GÌ?
+-- CHUẨN BỊ: khôi phục CompanyX và chuyển sang database này
+-- (Mục 2.1 trong báo cáo, phải chạy trước mọi truy vấn bên dưới)
 -- =============================================================
-
--- [1.5] Khôi phục CompanyX từ file .bak (chạy trên master, một lần)
+-- [2.1] Khôi phục CompanyX từ file .bak (chạy trên master, một lần)
 -- Xem tên logic của các file bên trong file .bak
 RESTORE FILELISTONLY FROM DISK = '/var/opt/mssql/data/CompanyX.bak';
 
@@ -17,7 +17,87 @@ WITH
 -- Chuyển sang database CompanyX cho toàn bộ truy vấn phía dưới
 USE CompanyX;
 
--- [1.6] Thống kê và phân tích kiến trúc tổng thể
+
+-- =============================================================
+-- MỤC 1.5. PHÂN TÍCH TẬP DỮ LIỆU KHÁCH HÀNG VÀ HÀNH VI RỜI BỎ
+-- =============================================================
+
+-- [1.5.1] Tổng quan về khách hàng và đơn hàng
+SELECT
+    COUNT(DISTINCT c.CustomerID) AS TotalCustomers,
+    COUNT(DISTINCT soh.SalesOrderID) AS TotalOrders,
+    CAST(MIN(soh.OrderDate) AS date) AS StartDate,
+    CAST(MAX(soh.OrderDate) AS date) AS EndDate,
+    DATEDIFF(month, MIN(soh.OrderDate), MAX(soh.OrderDate))
+        AS TotalMonths,
+    SUM(soh.TotalDue) AS TotalRevenue
+FROM Sales.Customer c
+LEFT JOIN Sales.SalesOrderHeader soh ON c.CustomerID = soh.CustomerID;
+
+-- [1.5.2] Phân loại khách hàng dựa vào hai cột PersonID và StoreID
+SELECT
+    CASE
+        WHEN c.StoreID IS NULL THEN 'Individual Customer'
+        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
+        ELSE 'Store Only (No Orders)'
+    END AS CustomerType,
+    COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers,
+    COUNT(DISTINCT soh.CustomerID) AS WithOrders
+FROM Sales.Customer c
+LEFT JOIN Sales.SalesOrderHeader soh ON soh.CustomerID = c.CustomerID
+GROUP BY
+    CASE
+        WHEN c.StoreID IS NULL THEN 'Individual Customer'
+        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
+        ELSE 'Store Only (No Orders)'
+    END
+ORDER BY NumberOfCustomers DESC;
+
+-- [1.5.3] Số người theo từng nhóm đối tượng trong bảng Person.Person
+SELECT PersonType,
+       COUNT(*) AS NumberOfPeople
+FROM Person.Person
+GROUP BY PersonType
+ORDER BY NumberOfPeople DESC;
+
+-- [1.5.4] Số khách hàng cá nhân theo quốc gia
+SELECT cr.Name AS Country,
+       COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers
+FROM Sales.Customer c
+JOIN Person.BusinessEntityAddress bea
+    ON bea.BusinessEntityID = c.PersonID
+JOIN Person.Address a ON a.AddressID = bea.AddressID
+JOIN Person.StateProvince sp ON sp.StateProvinceID = a.StateProvinceID
+JOIN Person.CountryRegion cr
+    ON cr.CountryRegionCode = sp.CountryRegionCode
+WHERE c.StoreID IS NULL
+GROUP BY cr.Name
+ORDER BY NumberOfCustomers DESC;
+
+-- [1.5.5] Monetary: 10 khách hàng có doanh thu cao nhất và giá trị mỗi đơn
+SELECT TOP 10
+    CAST(CustomerID AS varchar) AS CustomerID,
+    COUNT(*) AS TotalOrders,
+    CAST(SUM(TotalDue) AS decimal(18,2)) AS TotalRevenue,
+    CAST(AVG(TotalDue) AS decimal(18,2)) AS AverageOrderValue
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID
+ORDER BY TotalRevenue DESC;
+
+-- [1.5.5] Frequency: 10 khách hàng mua nhiều lần nhất
+SELECT TOP 10
+    CAST(CustomerID AS varchar) AS CustomerID,
+    COUNT(*) AS TotalOrders
+FROM Sales.SalesOrderHeader
+GROUP BY CustomerID
+ORDER BY TotalOrders DESC, CustomerID;
+
+
+-- =============================================================
+-- MỤC 2. PHÂN TÍCH CƠ SỞ DỮ LIỆU
+-- =============================================================
+
+-- [2.2] Thống kê và phân tích kiến trúc tổng thể
 -- Danh sách bảng theo schema (tham khảo, không đưa vào báo cáo)
 SELECT
     [s].[name] AS [SchemaName],
@@ -31,7 +111,7 @@ ORDER BY
     [s].[name],
     [t].[name];
 
--- [1.6] Số bảng và số cột của từng schema
+-- [2.2] Số bảng và số cột của từng schema
 SELECT
     s.name AS Schema_Name,
     COUNT(DISTINCT t.object_id) AS So_Bang,
@@ -42,7 +122,7 @@ JOIN sys.columns c ON t.object_id = c.object_id
 GROUP BY s.name
 ORDER BY So_Cot DESC;
 
--- [1.6] Số bảng dùng khóa đơn và khóa phức hợp
+-- [2.2] Số bảng dùng khóa đơn và khóa phức hợp
 WITH PK_Stat AS (
     SELECT
         kc.parent_object_id,
@@ -65,7 +145,7 @@ SELECT
 FROM PK_Stat
 GROUP BY CASE WHEN So_Cot_PK = 1 THEN N'Khóa đơn' ELSE N'Khóa phức hợp' END;
 
--- [1.6] Danh sách khóa chính
+-- [2.2] Danh sách khóa chính
 SELECT OBJECT_SCHEMA_NAME(parent_object_id) AS SchemaName,
        OBJECT_NAME(parent_object_id)        AS TableName,
        name                                 AS PKName
@@ -73,7 +153,7 @@ FROM sys.key_constraints
 WHERE type = 'PK'
 ORDER BY 1, 2;
 
--- [1.6] Danh sách khóa ngoại và bảng được tham chiếu
+-- [2.2] Danh sách khóa ngoại và bảng được tham chiếu
 SELECT OBJECT_SCHEMA_NAME(parent_object_id)     AS SchemaName,
        OBJECT_NAME(parent_object_id)            AS TableName,
        name                                     AS FKName,
@@ -81,14 +161,14 @@ SELECT OBJECT_SCHEMA_NAME(parent_object_id)     AS SchemaName,
 FROM sys.foreign_keys
 ORDER BY 1, 2;
 
--- [1.6] Số khóa ngoại của từng schema
+-- [2.2] Số khóa ngoại của từng schema
 SELECT OBJECT_SCHEMA_NAME(parent_object_id) AS SchemaName,
        COUNT(*) AS So_Khoa_Ngoai
 FROM sys.foreign_keys
 GROUP BY OBJECT_SCHEMA_NAME(parent_object_id)
 ORDER BY So_Khoa_Ngoai DESC;
 
--- [1.6] Những bảng được các bảng khác trỏ tới nhiều nhất
+-- [2.2] Những bảng được các bảng khác trỏ tới nhiều nhất
 SELECT TOP 5
        OBJECT_SCHEMA_NAME(referenced_object_id) AS SchemaName,
        OBJECT_NAME(referenced_object_id) AS TableName,
@@ -97,7 +177,7 @@ FROM sys.foreign_keys
 GROUP BY referenced_object_id
 ORDER BY So_Lan_Duoc_Tham_Chieu DESC, TableName;
 
--- [1.6] Bảng con tham chiếu cùng một bảng cha từ 2 lần trở lên (tham khảo, không đưa vào báo cáo)
+-- [2.2] Bảng con tham chiếu cùng một bảng cha từ 2 lần trở lên (tham khảo, không đưa vào báo cáo)
 SELECT
     OBJECT_SCHEMA_NAME(parent_object_id)     AS Bang_Con_Schema,
     OBJECT_NAME(parent_object_id)            AS Bang_Con,
@@ -109,7 +189,7 @@ GROUP BY parent_object_id, referenced_object_id
 HAVING COUNT(*) > 1;
 
 
--- [1.7] Quy mô dữ liệu: số dòng mỗi bảng
+-- [2.3] Quy mô dữ liệu: số dòng mỗi bảng
 SELECT OBJECT_SCHEMA_NAME(object_id) AS SchemaName,
        OBJECT_NAME(object_id)        AS TableName,
        row_count                     AS [RowCount]
@@ -118,7 +198,7 @@ WHERE index_id IN (0, 1)
   AND OBJECTPROPERTY(object_id, 'IsUserTable') = 1
 ORDER BY row_count DESC;
 
--- [1.7] Chia các bảng thành ba nhóm theo số dòng
+-- [2.3] Chia các bảng thành ba nhóm theo số dòng
 WITH table_rows AS (
     SELECT OBJECT_NAME(object_id) AS TableName, row_count
     FROM sys.dm_db_partition_stats
@@ -138,87 +218,18 @@ GROUP BY CASE WHEN row_count >= 10000 THEN '1. From 10,000 rows'
               ELSE '3. Under 1,000 rows' END
 ORDER BY Nhom_Bang;
 
--- [1.7] Kiểm tra BusinessEntity có bằng Person + Store + Vendor không
+-- [2.3] Kiểm tra BusinessEntity có bằng Person + Store + Vendor không
 SELECT (SELECT COUNT(*) FROM Person.BusinessEntity) AS BusinessEntity,
        (SELECT COUNT(*) FROM Person.Person) AS Person,
        (SELECT COUNT(*) FROM Sales.Store) AS Store,
        (SELECT COUNT(*) FROM Purchasing.Vendor) AS Vendor;
 
+
 -- =============================================================
--- MỤC 2. PHÂN TÍCH TẬP DỮ LIỆU KHÁCH HÀNG VÀ HÀNH VI RỜI BỎ
+-- MỤC 3. KHÁCH HÀNG TƯƠNG TÁC VỚI CÔNG TY NHƯ THẾ NÀO?
 -- =============================================================
 
--- [2.1] Tổng quan về khách hàng và đơn hàng
-SELECT
-    COUNT(DISTINCT c.CustomerID) AS TotalCustomers,
-    COUNT(DISTINCT soh.SalesOrderID) AS TotalOrders,
-    CAST(MIN(soh.OrderDate) AS date) AS StartDate,
-    CAST(MAX(soh.OrderDate) AS date) AS EndDate,
-    DATEDIFF(month, MIN(soh.OrderDate), MAX(soh.OrderDate))
-        AS TotalMonths,
-    SUM(soh.TotalDue) AS TotalRevenue
-FROM Sales.Customer c
-LEFT JOIN Sales.SalesOrderHeader soh ON c.CustomerID = soh.CustomerID;
-
--- [2.2] Phân loại khách hàng dựa vào hai cột PersonID và StoreID
-SELECT
-    CASE
-        WHEN c.StoreID IS NULL THEN 'Individual Customer'
-        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
-        ELSE 'Store Only (No Orders)'
-    END AS CustomerType,
-    COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers,
-    COUNT(DISTINCT soh.CustomerID) AS WithOrders
-FROM Sales.Customer c
-LEFT JOIN Sales.SalesOrderHeader soh ON soh.CustomerID = c.CustomerID
-GROUP BY
-    CASE
-        WHEN c.StoreID IS NULL THEN 'Individual Customer'
-        WHEN c.PersonID IS NOT NULL THEN 'Store Customer'
-        ELSE 'Store Only (No Orders)'
-    END
-ORDER BY NumberOfCustomers DESC;
-
--- [2.3] Số người theo từng nhóm đối tượng trong bảng Person.Person
-SELECT PersonType,
-       COUNT(*) AS NumberOfPeople
-FROM Person.Person
-GROUP BY PersonType
-ORDER BY NumberOfPeople DESC;
-
--- [2.4] Số khách hàng cá nhân theo quốc gia
-SELECT cr.Name AS Country,
-       COUNT(DISTINCT c.CustomerID) AS NumberOfCustomers
-FROM Sales.Customer c
-JOIN Person.BusinessEntityAddress bea
-    ON bea.BusinessEntityID = c.PersonID
-JOIN Person.Address a ON a.AddressID = bea.AddressID
-JOIN Person.StateProvince sp ON sp.StateProvinceID = a.StateProvinceID
-JOIN Person.CountryRegion cr
-    ON cr.CountryRegionCode = sp.CountryRegionCode
-WHERE c.StoreID IS NULL
-GROUP BY cr.Name
-ORDER BY NumberOfCustomers DESC;
-
--- [2.5] Monetary: 10 khách hàng có doanh thu cao nhất và giá trị mỗi đơn
-SELECT TOP 10
-    CAST(CustomerID AS varchar) AS CustomerID,
-    COUNT(*) AS TotalOrders,
-    CAST(SUM(TotalDue) AS decimal(18,2)) AS TotalRevenue,
-    CAST(AVG(TotalDue) AS decimal(18,2)) AS AverageOrderValue
-FROM Sales.SalesOrderHeader
-GROUP BY CustomerID
-ORDER BY TotalRevenue DESC;
-
--- [2.5] Frequency: 10 khách hàng mua nhiều lần nhất
-SELECT TOP 10
-    CAST(CustomerID AS varchar) AS CustomerID,
-    COUNT(*) AS TotalOrders
-FROM Sales.SalesOrderHeader
-GROUP BY CustomerID
-ORDER BY TotalOrders DESC, CustomerID;
-
--- [2.6] Số khách hàng theo số lần mua
+-- [3.1] Số khách hàng theo số lần mua
 WITH orders_per_customer AS (
     SELECT CustomerID, COUNT(*) AS OrderCount
     FROM Sales.SalesOrderHeader
@@ -232,7 +243,7 @@ FROM orders_per_customer
 GROUP BY OrderCount
 ORDER BY OrderCount;
 
--- [2.7] Những khách hàng lâu nhất chưa quay lại mua (tính đến 30/06/2014)
+-- [3.2] Những khách hàng lâu nhất chưa quay lại mua (tính đến 30/06/2014)
 SELECT TOP 10
     CAST(CustomerID AS varchar) AS CustomerID,
     MAX(OrderDate) AS LastPurchaseDate,
@@ -241,7 +252,7 @@ FROM Sales.SalesOrderHeader
 GROUP BY CustomerID
 ORDER BY DaysSinceLastPurchase DESC, CustomerID;
 
--- [2.8] Khoảng cách trung bình giữa hai lần mua của từng khách
+-- [3.3] Khoảng cách trung bình giữa hai lần mua của từng khách
 WITH gaps AS (
     SELECT CustomerID,
            DATEDIFF(day,
@@ -258,7 +269,7 @@ WHERE GapDays IS NOT NULL
 GROUP BY CustomerID
 ORDER BY AvgDaysBetweenOrders DESC, CustomerID;
 
--- [2.9] Số đơn và doanh thu theo từng năm của hai khách hàng mẫu
+-- [3.4] Số đơn và doanh thu theo từng năm của hai khách hàng mẫu
 SELECT
     CAST(CustomerID AS varchar) AS CustomerID,
     DATENAME(year, OrderDate) AS OrderYear,
@@ -269,7 +280,7 @@ WHERE CustomerID IN (11000, 11001)
 GROUP BY CustomerID, DATENAME(year, OrderDate)
 ORDER BY CustomerID, OrderYear;
 
--- [2.9] Số đơn, số khách có mua và doanh thu theo từng tháng
+-- [3.4] Số đơn, số khách có mua và doanh thu theo từng tháng
 SELECT
     DATENAME(year, OrderDate) AS OrderYear,
     MONTH(OrderDate) AS OrderMonth,
